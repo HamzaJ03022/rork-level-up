@@ -58,6 +58,10 @@ export type AIAnalysisResult = {
     strengths: string[];
     suggestions: string[];
   };
+  style?: {
+    strengths: string[];
+    suggestions: string[];
+  };
   priorityAreas?: string[];
 };
 

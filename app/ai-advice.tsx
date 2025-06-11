@@ -78,68 +78,84 @@ export default function AIAdviceScreen() {
         return;
       }
       
-      // Generate mock analysis
+      // Check which routines the user currently follows
+      const currentRoutines = profile?.currentRoutines || [];
+      const hasSkincare = currentRoutines.some(r => r.includes('skincare'));
+      const hasWorkout = currentRoutines.some(r => r.includes('workout'));
+      const hasGrooming = currentRoutines.some(r => r.includes('grooming'));
+      const hasPosture = currentRoutines.some(r => r.includes('posture'));
+      const hasHydration = currentRoutines.some(r => r.includes('hydration'));
+      const hasProtein = currentRoutines.some(r => r.includes('protein'));
+      const hasStyle = currentRoutines.some(r => r.includes('style'));
+      const hasDental = currentRoutines.some(r => r.includes('dental'));
+      
+      // Generate personalized analysis based on current routines
       const mockAnalysis: AIAnalysisResult = {
         face: {
           strengths: [
-            "Good facial symmetry",
-            "Strong jawline definition",
-            "Expressive eyes"
+            hasGrooming ? "Your dedication to facial grooming is paying off" : "Good natural facial structure",
+            "Strong facial symmetry potential",
+            hasGrooming ? "Your attention to facial grooming shows in your appearance" : "Natural facial features with good potential"
           ],
           suggestions: [
-            "Consider implementing a basic skincare routine",
-            "Try facial exercises to enhance muscle tone",
-            "Experiment with different facial hair styles to enhance features"
+            hasSkincare ? "Take your skincare to the next level by adding targeted treatments for specific concerns" : "Starting a basic skincare routine would dramatically enhance your facial appearance",
+            hasGrooming ? "Experiment with different facial hair styles to find what best complements your face shape" : "Consider facial hair grooming to enhance your facial structure",
+            "Adding daily facial exercises would help define your jawline and facial muscles, taking your appearance to the next level"
           ]
         },
         skin: {
           strengths: [
-            "Even skin tone",
-            "No major blemishes",
-            "Natural healthy glow"
+            hasSkincare ? "Your commitment to skincare is evident in your complexion" : "Natural skin tone with good potential",
+            hasSkincare ? "Your current skincare routine has established a good foundation" : "No major skin concerns visible",
+            hasHydration ? "Your hydration habits are benefiting your skin's appearance" : "Natural skin resilience"
           ],
           suggestions: [
-            "Add exfoliation to your routine",
-            "Consider adding SPF protection daily",
-            "Stay hydrated for better skin appearance"
+            hasSkincare ? "Level up your routine by adding exfoliation 2-3 times weekly for improved texture and glow" : "Starting with a basic cleanser and moisturizer would transform your skin's appearance",
+            hasSkincare ? "Adding a vitamin C serum would enhance your current routine and boost your skin's radiance" : "Daily SPF protection would prevent premature aging and maintain your skin's youthful appearance",
+            hasHydration ? "Continue your excellent hydration habits for optimal skin health" : "Increasing your daily water intake would dramatically improve your skin's appearance and health"
           ]
         },
         hair: {
           strengths: [
-            "Good hair density",
-            "Natural hair color suits your complexion"
+            hasGrooming ? "Your attention to hair care is evident" : "Good natural hair density and texture",
+            hasGrooming ? "Your current hair maintenance provides a solid foundation" : "Natural hair color complements your complexion well",
+            hasGrooming ? "Regular grooming shows discipline and attention to detail" : "Hair has potential for various styling options"
           ],
           suggestions: [
-            "Consider a more structured haircut",
-            "Try styling products for more definition",
-            "Regular trims will keep your style looking fresh"
+            hasGrooming ? "Experiment with different styling products to enhance texture and definition" : "A structured haircut would significantly elevate your appearance",
+            hasGrooming ? "Consider a professional consultation for a style that best frames your face shape" : "Regular trims every 4-6 weeks would keep your style looking intentional and fresh",
+            hasGrooming ? "Adding a weekly deep conditioning treatment would take your hair care to the next level" : "Developing a basic hair care routine would transform your overall appearance"
           ]
         },
         body: {
           strengths: [
-            "Good natural physique",
-            "Balanced proportions"
+            hasWorkout ? "Your commitment to physical fitness is showing positive results" : "Good natural physique with potential",
+            hasWorkout ? "Current exercise routine has established a foundation to build upon" : "Balanced body proportions",
+            hasProtein ? "Your attention to nutrition supports your physical development" : "Natural frame with good potential for development"
           ],
           suggestions: [
-            "Focus on compound exercises for overall development",
-            "Incorporate protein-rich foods for muscle development",
-            "Add variety to your workout routine"
+            hasWorkout ? "Incorporating more compound exercises would accelerate your physical development" : "Starting with just 2-3 strength training sessions weekly would transform your physique",
+            hasWorkout ? "Adding progressive overload to your routine would take your results to the next level" : "Building muscle would significantly enhance your overall appearance and confidence",
+            hasProtein ? "Continue prioritizing protein intake for optimal muscle development" : "Increasing protein consumption would support muscle growth and definition"
           ]
         },
         posture: {
           strengths: [
-            "Natural stance"
+            hasPosture ? "Your awareness of posture importance is evident" : "Natural stance with improvement potential",
+            hasPosture ? "Current posture habits provide a good foundation" : "No major postural issues observed"
           ],
           suggestions: [
-            "Practice standing tall with shoulders back",
-            "Strengthen core muscles to support better posture",
-            "Set reminders to check posture throughout the day"
+            hasPosture ? "Daily posture exercises would enhance your current efforts" : "Practicing standing tall with shoulders back would instantly improve your appearance",
+            hasPosture ? "Adding core-strengthening exercises would support your posture goals" : "Strengthening your core and back muscles would dramatically improve your posture",
+            hasPosture ? "Continue your posture awareness throughout the day" : "Setting hourly reminders to check posture would create lasting improvement"
           ]
         },
         priorityAreas: [
-          "Skincare routine",
-          "Posture improvement",
-          "Strength training"
+          !hasSkincare ? "Basic skincare routine" : "Advanced skincare techniques",
+          !hasWorkout ? "Strength training fundamentals" : "Progressive strength development",
+          !hasPosture ? "Posture improvement" : "Advanced posture refinement",
+          !hasGrooming ? "Grooming essentials" : "Refined grooming techniques",
+          !hasHydration ? "Hydration habits" : "Nutrition optimization"
         ]
       };
       
@@ -271,7 +287,7 @@ export default function AIAdviceScreen() {
                   <View style={styles.priorityContainer}>
                     <Text style={styles.priorityTitle}>Priority Areas</Text>
                     <Text style={styles.prioritySubtitle}>
-                      Based on our analysis, these are the areas to focus on first:
+                      Based on our analysis, these are the areas to focus on first to level up your appearance:
                     </Text>
                     
                     {aiAnalysis.results.priorityAreas.map((area: string, index: number) => (

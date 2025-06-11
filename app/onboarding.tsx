@@ -137,67 +137,95 @@ export default function OnboardingScreen() {
       // For this demo, we'll simulate an analysis with a timeout
       await new Promise(resolve => setTimeout(resolve, 3000));
       
-      // Generate mock analysis based on selected routines
+      // Check which routines the user currently follows
       const hasSkincare = currentRoutines.some(r => r.includes('skincare'));
       const hasWorkout = currentRoutines.some(r => r.includes('workout'));
       const hasGrooming = currentRoutines.some(r => r.includes('grooming'));
       const hasPosture = currentRoutines.some(r => r.includes('posture'));
+      const hasHydration = currentRoutines.some(r => r.includes('hydration'));
+      const hasProtein = currentRoutines.some(r => r.includes('protein'));
+      const hasStyle = currentRoutines.some(r => r.includes('style'));
+      const hasDental = currentRoutines.some(r => r.includes('dental'));
       
+      // Generate personalized analysis based on current routines
       const mockAnalysis = {
         face: {
           strengths: [
-            "Good facial symmetry",
-            "Strong jawline structure",
-            hasGrooming ? "Well-maintained facial hair" : "Natural facial features"
+            hasGrooming ? "You're already maintaining your facial appearance well" : "Good natural facial structure",
+            "Strong facial symmetry potential",
+            hasGrooming ? "Your attention to facial grooming shows in your appearance" : "Natural facial features with good potential"
           ],
           suggestions: [
-            hasSkincare ? "Continue your skincare routine for optimal results" : "Consider implementing a basic skincare routine",
-            "Try facial exercises to enhance muscle tone",
-            hasGrooming ? "Experiment with different facial hair styles" : "Consider facial hair to enhance facial structure"
+            hasSkincare ? "Continue your skincare routine and consider adding targeted treatments for even better results" : "Implementing a basic skincare routine would significantly enhance your facial appearance",
+            hasGrooming ? "Experiment with different facial hair styles to find what best complements your face shape" : "Consider facial hair grooming to enhance your facial structure",
+            "Daily facial exercises would help define your jawline and facial muscles, taking your appearance to the next level"
           ]
         },
         skin: {
           strengths: [
-            hasSkincare ? "Good skin hydration" : "Natural skin tone",
-            hasSkincare ? "Even complexion" : "No major skin concerns visible"
+            hasSkincare ? "Your commitment to skincare is evident in your complexion" : "Natural skin tone with good potential",
+            hasSkincare ? "Your current skincare routine has established a good foundation" : "No major skin concerns visible",
+            hasHydration ? "Your hydration habits are benefiting your skin's appearance" : "Natural skin resilience"
           ],
           suggestions: [
-            hasSkincare ? "Add exfoliation to your routine" : "Start with a basic cleanser and moisturizer",
-            "Consider adding SPF protection daily",
-            "Stay hydrated for better skin appearance"
+            hasSkincare ? "Level up your routine by adding exfoliation 2-3 times weekly for improved texture and glow" : "Starting with a basic cleanser and moisturizer would transform your skin's appearance",
+            hasSkincare ? "Adding a vitamin C serum would enhance your current routine and boost your skin's radiance" : "Daily SPF protection would prevent premature aging and maintain your skin's youthful appearance",
+            hasHydration ? "Continue your excellent hydration habits for optimal skin health" : "Increasing your daily water intake would dramatically improve your skin's appearance and health"
           ]
         },
         hair: {
           strengths: [
-            hasGrooming ? "Well-maintained hairstyle" : "Good hair density",
-            "Natural hair color suits your complexion"
+            hasGrooming ? "Your attention to hair care is evident" : "Good natural hair density and texture",
+            hasGrooming ? "Your current hair maintenance provides a solid foundation" : "Natural hair color complements your complexion well",
+            hasGrooming ? "Regular grooming shows discipline and attention to detail" : "Hair has potential for various styling options"
           ],
           suggestions: [
-            hasGrooming ? "Try styling products for more definition" : "Consider a more structured haircut",
-            "Regular trims will keep your style looking fresh"
+            hasGrooming ? "Experiment with different styling products to enhance texture and definition" : "A structured haircut would significantly elevate your appearance",
+            hasGrooming ? "Consider a professional consultation for a style that best frames your face shape" : "Regular trims every 4-6 weeks would keep your style looking intentional and fresh",
+            hasGrooming ? "Adding a weekly deep conditioning treatment would take your hair care to the next level" : "Developing a basic hair care routine would transform your overall appearance"
           ]
         },
         body: {
           strengths: [
-            hasWorkout ? "Signs of regular physical activity" : "Good natural physique",
-            hasWorkout ? "Developing muscle definition" : "Balanced proportions"
+            hasWorkout ? "Your commitment to physical fitness is showing positive results" : "Good natural physique with potential",
+            hasWorkout ? "Current exercise routine has established a foundation to build upon" : "Balanced body proportions",
+            hasProtein ? "Your attention to nutrition supports your physical development" : "Natural frame with good potential for development"
           ],
           suggestions: [
-            hasWorkout ? "Focus on compound exercises for overall development" : "Consider starting strength training",
-            "Incorporate protein-rich foods for muscle development",
-            hasWorkout ? "Add variety to your workout routine" : "Start with 2-3 workouts per week"
+            hasWorkout ? "Incorporating more compound exercises would accelerate your physical development" : "Starting with just 2-3 strength training sessions weekly would transform your physique",
+            hasWorkout ? "Adding progressive overload to your routine would take your results to the next level" : "Building muscle would significantly enhance your overall appearance and confidence",
+            hasProtein ? "Continue prioritizing protein intake for optimal muscle development" : "Increasing protein consumption would support muscle growth and definition"
           ]
         },
         posture: {
           strengths: [
-            hasPosture ? "Awareness of posture importance" : "Natural stance"
+            hasPosture ? "Your awareness of posture importance is evident" : "Natural stance with improvement potential",
+            hasPosture ? "Current posture habits provide a good foundation" : "No major postural issues observed"
           ],
           suggestions: [
-            hasPosture ? "Continue posture exercises daily" : "Practice standing tall with shoulders back",
-            "Strengthen core muscles to support better posture",
-            "Set reminders to check posture throughout the day"
+            hasPosture ? "Daily posture exercises would enhance your current efforts" : "Practicing standing tall with shoulders back would instantly improve your appearance",
+            hasPosture ? "Adding core-strengthening exercises would support your posture goals" : "Strengthening your core and back muscles would dramatically improve your posture",
+            hasPosture ? "Continue your posture awareness throughout the day" : "Setting hourly reminders to check posture would create lasting improvement"
           ]
-        }
+        },
+        style: {
+          strengths: [
+            hasStyle ? "Your attention to clothing choices shows good style awareness" : "Potential for style development",
+            hasStyle ? "Current outfit planning provides a good foundation" : "Natural style sensibility"
+          ],
+          suggestions: [
+            hasStyle ? "Developing a more cohesive wardrobe with versatile pieces would elevate your style" : "Investing in well-fitted basics would transform your appearance",
+            hasStyle ? "Adding statement accessories would enhance your current style" : "Learning about color theory and which colors complement your complexion would improve your style",
+            hasStyle ? "Continue developing your personal style identity" : "Creating a signature look would help you stand out and make memorable impressions"
+          ]
+        },
+        priorityAreas: [
+          !hasSkincare ? "Basic skincare routine" : "Advanced skincare techniques",
+          !hasWorkout ? "Strength training fundamentals" : "Progressive strength development",
+          !hasPosture ? "Posture improvement" : "Advanced posture refinement",
+          !hasGrooming ? "Grooming essentials" : "Refined grooming techniques",
+          !hasHydration ? "Hydration habits" : "Nutrition optimization"
+        ]
       };
       
       setAnalysisResults(mockAnalysis);
@@ -678,31 +706,50 @@ export default function OnboardingScreen() {
                 
                 {analysisResults && (
                   <View style={styles.analysisResults}>
-                    {Object.entries(analysisResults).map(([category, data]: [string, any]) => (
-                      <View key={category} style={styles.categoryAnalysis}>
-                        <Text style={styles.categoryAnalysisTitle}>
-                          {category.charAt(0).toUpperCase() + category.slice(1)}
+                    {Object.entries(analysisResults).map(([category, data]: [string, any]) => {
+                      if (category === 'priorityAreas') return null;
+                      
+                      return (
+                        <View key={category} style={styles.categoryAnalysis}>
+                          <Text style={styles.categoryAnalysisTitle}>
+                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                          </Text>
+                          
+                          <View style={styles.analysisSection}>
+                            <Text style={styles.analysisSectionTitle}>Strengths</Text>
+                            {data.strengths.map((strength: string, index: number) => (
+                              <View key={index} style={styles.analysisItem}>
+                                <Text style={styles.analysisItemText}>• {strength}</Text>
+                              </View>
+                            ))}
+                          </View>
+                          
+                          <View style={styles.analysisSection}>
+                            <Text style={styles.analysisSectionTitle}>Suggestions</Text>
+                            {data.suggestions.map((suggestion: string, index: number) => (
+                              <View key={index} style={styles.analysisItem}>
+                                <Text style={styles.analysisItemText}>• {suggestion}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      );
+                    })}
+                    
+                    {analysisResults.priorityAreas && (
+                      <View style={styles.priorityContainer}>
+                        <Text style={styles.priorityTitle}>Priority Areas</Text>
+                        <Text style={styles.prioritySubtitle}>
+                          Based on our analysis, focus on these areas first to level up your appearance:
                         </Text>
                         
-                        <View style={styles.analysisSection}>
-                          <Text style={styles.analysisSectionTitle}>Strengths</Text>
-                          {data.strengths.map((strength: string, index: number) => (
-                            <View key={index} style={styles.analysisItem}>
-                              <Text style={styles.analysisItemText}>• {strength}</Text>
-                            </View>
-                          ))}
-                        </View>
-                        
-                        <View style={styles.analysisSection}>
-                          <Text style={styles.analysisSectionTitle}>Suggestions</Text>
-                          {data.suggestions.map((suggestion: string, index: number) => (
-                            <View key={index} style={styles.analysisItem}>
-                              <Text style={styles.analysisItemText}>• {suggestion}</Text>
-                            </View>
-                          ))}
-                        </View>
+                        {analysisResults.priorityAreas.map((area: string, index: number) => (
+                          <View key={index} style={styles.priorityItem}>
+                            <Text style={styles.priorityText}>{index + 1}. {area}</Text>
+                          </View>
+                        ))}
                       </View>
-                    ))}
+                    )}
                   </View>
                 )}
               </>
@@ -1159,6 +1206,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.dark.text,
     lineHeight: 20,
+  },
+  priorityContainer: {
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  priorityTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.dark.secondary,
+    marginBottom: 8,
+  },
+  prioritySubtitle: {
+    fontSize: 14,
+    color: Colors.dark.subtext,
+    marginBottom: 12,
+  },
+  priorityItem: {
+    marginBottom: 8,
+  },
+  priorityText: {
+    fontSize: 16,
+    color: Colors.dark.text,
+    fontWeight: '500',
   },
   goalsContainer: {
     marginBottom: 24,
