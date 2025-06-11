@@ -5,12 +5,17 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import Colors from "@/constants/colors";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { trpc, trpcClient } from "@/lib/trpc";
 
 import { ErrorBoundary } from "./error-boundary";
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
+
+// Create a client
+const queryClient = new QueryClient();
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -39,7 +44,11 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <RootLayoutNav />
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <RootLayoutNav />
+        </QueryClientProvider>
+      </trpc.Provider>
     </ErrorBoundary>
   );
 }
