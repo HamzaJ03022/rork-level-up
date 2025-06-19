@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserProfile, ProgressPhoto, Routine, AIAnalysisResult, HaircutAnalysis } from '@/types';
+import { UserProfile, ProgressPhoto, Routine, AIAnalysisResult, HaircutAnalysis, BeardAnalysis } from '@/types';
 
 interface UserState {
   profile: UserProfile | null;
@@ -22,6 +22,7 @@ interface UserState {
   setOnboarded: (value: boolean) => void;
   setAIAnalysis: (results: AIAnalysisResult) => void;
   setHaircutAnalysis: (analysis: HaircutAnalysis) => void;
+  setBeardAnalysis: (analysis: BeardAnalysis) => void;
 }
 
 export const useUserStore = create<UserState>()(
@@ -95,6 +96,13 @@ export const useUserStore = create<UserState>()(
         profile: state.profile ? {
           ...state.profile,
           haircutAnalysis: analysis
+        } : null
+      })),
+
+      setBeardAnalysis: (analysis) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          beardAnalysis: analysis
         } : null
       })),
     }),

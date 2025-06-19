@@ -36,6 +36,7 @@ export type UserProfile = {
   routines: Routine[];
   completedTips: string[];
   haircutAnalysis?: HaircutAnalysis;
+  beardAnalysis?: BeardAnalysis;
 };
 
 export type AIAnalysisResult = {
@@ -98,5 +99,23 @@ export type HaircutAnalysis = {
   hairLength: string;
   faceShapeDescription: string;
   suggestions: HaircutSuggestion[];
+  analysisDate: string;
+};
+
+export type BeardStyleSuggestion = {
+  name: string;
+  description: string;
+  suitability: string;
+  maintenanceLevel: string;
+  imageUrl: string;
+};
+
+export type BeardAnalysis = {
+  photoUri: string;
+  faceShape: string;
+  beardDensity: string;
+  currentStyle: string;
+  faceShapeDescription: string;
+  suggestions: BeardStyleSuggestion[];
   analysisDate: string;
 };

@@ -6,7 +6,7 @@ import { tips } from '@/constants/tips';
 import { categories } from '@/constants/categories';
 import { Star, Clock, BarChart, Check, Plus, X, Camera, Brain, ArrowRight, RefreshCw } from 'lucide-react-native';
 import { useUserStore } from '@/store/user-store';
-import { Routine, HaircutSuggestion } from '@/types';
+import { Routine, HaircutSuggestion, BeardStyleSuggestion } from '@/types';
 import * as ImagePicker from 'expo-image-picker';
 import { trpc, trpcClient } from '@/lib/trpc';
 
@@ -17,29 +17,43 @@ export default function TipDetailScreen() {
   const markTipCompleted = useUserStore(state => state.markTipCompleted);
   const addRoutine = useUserStore(state => state.addRoutine);
   const setHaircutAnalysis = useUserStore(state => state.setHaircutAnalysis);
+  const setBeardAnalysis = useUserStore(state => state.setBeardAnalysis);
   
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedFrequency, setSelectedFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   
+  // Haircut analysis states
   const [haircutPhoto, setHaircutPhoto] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [isAnalyzingHaircut, setIsAnalyzingHaircut] = useState(false);
+  const [haircutPhotoError, setHaircutPhotoError] = useState<string | null>(null);
   const [haircutResults, setHaircutResults] = useState<any>(null);
   const [haircutModalVisible, setHaircutModalVisible] = useState(false);
   const [selectedHaircut, setSelectedHaircut] = useState<HaircutSuggestion | null>(null);
+  
+  // Beard analysis states
+  const [beardPhoto, setBeardPhoto] = useState<string | null>(null);
+  const [isAnalyzingBeard, setIsAnalyzingBeard] = useState(false);
+  const [beardPhotoError, setBeardPhotoError] = useState<string | null>(null);
+  const [beardResults, setBeardResults] = useState<any>(null);
+  const [beardModalVisible, setBeardModalVisible] = useState(false);
+  const [selectedBeardStyle, setSelectedBeardStyle] = useState<BeardStyleSuggestion | null>(null);
   
   const tip = tips.find(t => t.id === id);
   const category = tip ? categories.find(cat => cat.id === tip.categoryId) : null;
   
   const isCompleted = profile?.completedTips.includes(id || '');
   const isHaircutTip = tip?.id === 'grooming-1'; // "Find Your Ideal Haircut" tip
+  const isBeardTip = tip?.id === 'grooming-2'; // "Master Beard Maintenance" tip
 
-  // Check if we already have a haircut analysis
+  // Check if we already have a haircut or beard analysis
   useEffect(() => {
     if (isHaircutTip && profile?.haircutAnalysis) {
       setHaircutResults(profile.haircutAnalysis);
     }
-  }, [isHaircutTip, profile?.haircutAnalysis]);
+    if (isBeardTip && profile?.beardAnalysis) {
+      setBeardResults(profile.beardAnalysis);
+    }
+  }, [isHaircutTip, isBeardTip, profile?.haircutAnalysis, profile?.beardAnalysis]);
 
   const handleMarkComplete = () => {
     if (!isCompleted && id) {
@@ -67,9 +81,10 @@ export default function TipDetailScreen() {
     }
   };
 
+  // Haircut photo handling
   const handlePickHaircutPhoto = async () => {
     try {
-      setPhotoError(null);
+      setHaircutPhotoError(null);
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -82,18 +97,18 @@ export default function TipDetailScreen() {
       }
     } catch (error) {
       console.error('Error picking haircut photo:', error);
-      setPhotoError('Failed to select image. Please try again.');
+      setHaircutPhotoError('Failed to select image. Please try again.');
     }
   };
 
   const analyzeHaircut = async () => {
     if (!haircutPhoto) {
-      setPhotoError('Please upload a photo first');
+      setHaircutPhotoError('Please upload a photo first');
       return;
     }
 
-    setIsAnalyzing(true);
-    setPhotoError(null);
+    setIsAnalyzingHaircut(true);
+    setHaircutPhotoError(null);
 
     try {
       // Call the backend to analyze the haircut
@@ -117,15 +132,77 @@ export default function TipDetailScreen() {
 
     } catch (error) {
       console.error('Error analyzing haircut:', error);
-      setPhotoError('Failed to analyze photo. Please try again.');
+      setHaircutPhotoError('Failed to analyze photo. Please try again.');
     } finally {
-      setIsAnalyzing(false);
+      setIsAnalyzingHaircut(false);
     }
   };
 
   const openHaircutDetails = (haircut: HaircutSuggestion) => {
     setSelectedHaircut(haircut);
     setHaircutModalVisible(true);
+  };
+
+  // Beard photo handling
+  const handlePickBeardPhoto = async () => {
+    try {
+      setBeardPhotoError(null);
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setBeardPhoto(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking beard photo:', error);
+      setBeardPhotoError('Failed to select image. Please try again.');
+    }
+  };
+
+  const analyzeBeard = async () => {
+    if (!beardPhoto) {
+      setBeardPhotoError('Please upload a photo first');
+      return;
+    }
+
+    setIsAnalyzingBeard(true);
+    setBeardPhotoError(null);
+
+    try {
+      // Call the backend to analyze the beard
+      const result = await trpcClient.beard.analyze.mutate({
+        photoUri: beardPhoto
+      });
+
+      // Store the results
+      setBeardResults(result);
+      
+      // Save to user profile
+      setBeardAnalysis({
+        photoUri: beardPhoto,
+        faceShape: result.faceShape,
+        beardDensity: result.beardDensity,
+        currentStyle: result.currentStyle,
+        faceShapeDescription: result.suggestions.faceShapeDescription,
+        suggestions: result.suggestions.beardStyles,
+        analysisDate: result.analysisDate
+      });
+
+    } catch (error) {
+      console.error('Error analyzing beard:', error);
+      setBeardPhotoError('Failed to analyze photo. Please try again.');
+    } finally {
+      setIsAnalyzingBeard(false);
+    }
+  };
+
+  const openBeardDetails = (beardStyle: BeardStyleSuggestion) => {
+    setSelectedBeardStyle(beardStyle);
+    setBeardModalVisible(true);
   };
 
   // Render impact stars
@@ -331,9 +408,9 @@ export default function TipDetailScreen() {
                     <Pressable 
                       style={styles.analyzeButton}
                       onPress={analyzeHaircut}
-                      disabled={isAnalyzing}
+                      disabled={isAnalyzingHaircut}
                     >
-                      {isAnalyzing ? (
+                      {isAnalyzingHaircut ? (
                         <ActivityIndicator size="small" color="#FFFFFF" />
                       ) : (
                         <>
@@ -354,8 +431,8 @@ export default function TipDetailScreen() {
                 </Pressable>
               )}
               
-              {photoError && (
-                <Text style={styles.errorText}>{photoError}</Text>
+              {haircutPhotoError && (
+                <Text style={styles.errorText}>{haircutPhotoError}</Text>
               )}
               
               <View style={styles.haircutTipsContainer}>
@@ -364,6 +441,187 @@ export default function TipDetailScreen() {
                 <Text style={styles.haircutTip}>• Use good lighting</Text>
                 <Text style={styles.haircutTip}>• Keep a neutral expression</Text>
                 <Text style={styles.haircutTip}>• Show your current hairstyle clearly</Text>
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Beard Analysis Section - Only show for the beard tip */}
+      {isBeardTip && (
+        <View style={styles.haircutContainer}>
+          <Text style={styles.haircutTitle}>Find Your Ideal Beard Style with AI</Text>
+          <Text style={styles.haircutDescription}>
+            Upload a clear photo of your face to get personalized beard style recommendations based on your face shape and current beard growth.
+          </Text>
+          
+          {beardResults ? (
+            <View style={styles.analysisResultsContainer}>
+              <View style={styles.photoResultRow}>
+                <View style={styles.uploadedPhotoContainer}>
+                  {Platform.OS === 'web' ? (
+                    <img 
+                      src={beardResults.photoUri} 
+                      alt="Your photo" 
+                      style={{ 
+                        width: 100, 
+                        height: 100, 
+                        objectFit: 'cover', 
+                        borderRadius: 50 
+                      }}
+                    />
+                  ) : (
+                    <Image 
+                      source={{ uri: beardResults.photoUri }} 
+                      style={styles.uploadedPhoto} 
+                    />
+                  )}
+                  <Text style={styles.photoLabel}>Your Photo</Text>
+                </View>
+                
+                <View style={styles.analysisDetails}>
+                  <Text style={styles.analysisDetail}>
+                    <Text style={styles.detailLabel}>Face Shape: </Text>
+                    <Text style={styles.detailValue}>{beardResults.faceShape.charAt(0).toUpperCase() + beardResults.faceShape.slice(1)}</Text>
+                  </Text>
+                  <Text style={styles.analysisDetail}>
+                    <Text style={styles.detailLabel}>Beard Density: </Text>
+                    <Text style={styles.detailValue}>{beardResults.beardDensity.charAt(0).toUpperCase() + beardResults.beardDensity.slice(1)}</Text>
+                  </Text>
+                  <Text style={styles.analysisDetail}>
+                    <Text style={styles.detailLabel}>Current Style: </Text>
+                    <Text style={styles.detailValue}>{beardResults.currentStyle.charAt(0).toUpperCase() + beardResults.currentStyle.slice(1).replace('-', ' ')}</Text>
+                  </Text>
+                </View>
+              </View>
+              
+              <View style={styles.faceShapeContainer}>
+                <Text style={styles.faceShapeTitle}>Your Face Shape</Text>
+                <Text style={styles.faceShapeDescription}>
+                  {beardResults.suggestions.faceShapeDescription}
+                </Text>
+              </View>
+              
+              <Text style={styles.suggestionsTitle}>Recommended Beard Styles</Text>
+              <Text style={styles.suggestionsSubtitle}>
+                Based on your face shape and beard density, here are some beard styles that would suit you well:
+              </Text>
+              
+              <View style={styles.haircutSuggestions}>
+                {beardResults.suggestions.beardStyles.map((style: BeardStyleSuggestion, index: number) => (
+                  <Pressable 
+                    key={index}
+                    style={styles.haircutCard}
+                    onPress={() => openBeardDetails(style)}
+                  >
+                    {Platform.OS === 'web' ? (
+                      <img 
+                        src={style.imageUrl} 
+                        alt={style.name} 
+                        style={{ 
+                          width: '100%', 
+                          height: 150, 
+                          objectFit: 'cover', 
+                          borderTopLeftRadius: 12,
+                          borderTopRightRadius: 12
+                        }}
+                      />
+                    ) : (
+                      <Image 
+                        source={{ uri: style.imageUrl }} 
+                        style={styles.haircutImage} 
+                      />
+                    )}
+                    <View style={styles.haircutCardContent}>
+                      <Text style={styles.haircutName}>{style.name}</Text>
+                      <Text style={styles.haircutMaintenance}>
+                        Maintenance: {style.maintenanceLevel}
+                      </Text>
+                      <Pressable style={styles.viewDetailsButton}>
+                        <Text style={styles.viewDetailsText}>View Details</Text>
+                        <ArrowRight size={16} color={Colors.dark.primary} />
+                      </Pressable>
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+              
+              <Pressable 
+                style={styles.newAnalysisButton}
+                onPress={() => {
+                  setBeardPhoto(null);
+                  setBeardResults(null);
+                }}
+              >
+                <RefreshCw size={18} color={Colors.dark.text} />
+                <Text style={styles.newAnalysisText}>Get New Analysis</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.haircutUploadContainer}>
+              {beardPhoto ? (
+                <View style={styles.haircutPhotoPreview}>
+                  {Platform.OS === 'web' ? (
+                    <img 
+                      src={beardPhoto} 
+                      alt="Beard" 
+                      style={{ 
+                        width: 200, 
+                        height: 200, 
+                        objectFit: 'cover', 
+                        borderRadius: 100 
+                      }}
+                    />
+                  ) : (
+                    <Image 
+                      source={{ uri: beardPhoto }} 
+                      style={styles.haircutPhotoImage} 
+                    />
+                  )}
+                  <View style={styles.photoActions}>
+                    <Pressable 
+                      style={styles.changePhotoButton}
+                      onPress={handlePickBeardPhoto}
+                    >
+                      <Text style={styles.changePhotoText}>Change Photo</Text>
+                    </Pressable>
+                    
+                    <Pressable 
+                      style={styles.analyzeButton}
+                      onPress={analyzeBeard}
+                      disabled={isAnalyzingBeard}
+                    >
+                      {isAnalyzingBeard ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <>
+                          <Brain size={16} color="#FFFFFF" />
+                          <Text style={styles.analyzeButtonText}>Analyze</Text>
+                        </>
+                      )}
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                <Pressable 
+                  style={styles.haircutUploadButton}
+                  onPress={handlePickBeardPhoto}
+                >
+                  <Camera size={40} color={Colors.dark.primary} />
+                  <Text style={styles.haircutUploadText}>Upload a clear photo of your face and beard</Text>
+                </Pressable>
+              )}
+              
+              {beardPhotoError && (
+                <Text style={styles.errorText}>{beardPhotoError}</Text>
+              )}
+              
+              <View style={styles.haircutTipsContainer}>
+                <Text style={styles.haircutTipsTitle}>Tips for a good photo:</Text>
+                <Text style={styles.haircutTip}>• Face the camera directly</Text>
+                <Text style={styles.haircutTip}>• Use good lighting</Text>
+                <Text style={styles.haircutTip}>• Show your current beard clearly</Text>
+                <Text style={styles.haircutTip}>• Include your full face in the frame</Text>
               </View>
             </View>
           )}
@@ -529,6 +787,111 @@ export default function TipDetailScreen() {
             <Pressable 
               style={styles.closeModalButton}
               onPress={() => setHaircutModalVisible(false)}
+            >
+              <Text style={styles.closeModalButtonText}>Close</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Beard Style Details Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={beardModalVisible}
+        onRequestClose={() => setBeardModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.haircutModalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{selectedBeardStyle?.name}</Text>
+              <Pressable onPress={() => setBeardModalVisible(false)}>
+                <X size={24} color={Colors.dark.text} />
+              </Pressable>
+            </View>
+            
+            {selectedBeardStyle && (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {Platform.OS === 'web' ? (
+                  <img 
+                    src={selectedBeardStyle.imageUrl} 
+                    alt={selectedBeardStyle.name} 
+                    style={{ 
+                      width: '100%', 
+                      height: 250, 
+                      objectFit: 'cover', 
+                      borderRadius: 12,
+                      marginBottom: 16
+                    }}
+                  />
+                ) : (
+                  <Image 
+                    source={{ uri: selectedBeardStyle.imageUrl }} 
+                    style={styles.haircutDetailImage} 
+                  />
+                )}
+                
+                <View style={styles.haircutDetailSection}>
+                  <Text style={styles.haircutDetailTitle}>Description</Text>
+                  <Text style={styles.haircutDetailText}>{selectedBeardStyle.description}</Text>
+                </View>
+                
+                <View style={styles.haircutDetailSection}>
+                  <Text style={styles.haircutDetailTitle}>Why It Suits You</Text>
+                  <Text style={styles.haircutDetailText}>{selectedBeardStyle.suitability}</Text>
+                </View>
+                
+                <View style={styles.haircutDetailSection}>
+                  <Text style={styles.haircutDetailTitle}>Maintenance Level</Text>
+                  <Text style={styles.haircutDetailText}>{selectedBeardStyle.maintenanceLevel}</Text>
+                </View>
+                
+                <View style={styles.haircutDetailSection}>
+                  <Text style={styles.haircutDetailTitle}>How to Achieve This Style</Text>
+                  <Text style={styles.haircutDetailText}>
+                    {selectedBeardStyle.name.includes("Stubble") ? 
+                      "Use a beard trimmer with a short guard (1-3mm). Trim every 2-3 days to maintain the perfect length. Define your neckline just above your Adam's apple." :
+                    selectedBeardStyle.name.includes("Goatee") ?
+                      "Grow your facial hair for 1-2 weeks. Use a precision trimmer to shape the goatee around your mouth and chin. Keep cheeks clean-shaven." :
+                    selectedBeardStyle.name.includes("Full Beard") ?
+                      "Grow your beard for 4-6 weeks without trimming. Then shape with scissors and a trimmer, defining your neckline and cheek lines." :
+                    selectedBeardStyle.name.includes("Boxed") ?
+                      "Grow your beard for 2-3 weeks. Use a trimmer to create clean, straight lines at the cheeks and a defined neckline. Keep the length uniform with regular trimming." :
+                    selectedBeardStyle.name.includes("Chin Strap") ?
+                      "Shave your cheeks and neck clean. Use a precision trimmer to create a thin line that follows your jawline from ear to ear." :
+                    "Start by growing your beard for several weeks. Visit a professional barber for the initial shaping, then maintain with regular trimming and proper beard care products."}
+                  </Text>
+                </View>
+                
+                <View style={styles.haircutDetailSection}>
+                  <Text style={styles.haircutDetailTitle}>Maintenance Tips</Text>
+                  <Text style={styles.haircutDetailText}>
+                    {selectedBeardStyle.maintenanceLevel === "Low" ? 
+                      "Wash with beard shampoo 2-3 times per week. Trim every 1-2 weeks to maintain shape. Apply beard oil occasionally to keep hair soft." :
+                    selectedBeardStyle.maintenanceLevel === "Medium" ?
+                      "Wash with beard shampoo 2-3 times per week. Apply beard oil daily to keep hair soft and healthy. Trim weekly to maintain shape. Use a beard brush to train hair direction." :
+                    "Wash with beard shampoo 2-3 times per week. Apply beard oil daily and beard balm for styling. Trim every 3-4 days to maintain precise shape. Use a beard brush and comb daily. Consider professional trimming monthly."}
+                  </Text>
+                </View>
+
+                <View style={styles.haircutDetailSection}>
+                  <Text style={styles.haircutDetailTitle}>Recommended Products</Text>
+                  <Text style={styles.haircutDetailText}>
+                    • Quality beard trimmer with multiple guard lengths{"\n"}
+                    • Beard shampoo and conditioner{"\n"}
+                    • Beard oil for hydration{"\n"}
+                    {selectedBeardStyle.maintenanceLevel !== "Low" ? "• Beard balm for styling\n" : ""}
+                    {selectedBeardStyle.maintenanceLevel === "High" ? "• Beard wax for precise styling\n" : ""}
+                    • Beard brush and comb{"\n"}
+                    • Precision scissors for detailing
+                  </Text>
+                </View>
+              </ScrollView>
+            )}
+            
+            <Pressable 
+              style={styles.closeModalButton}
+              onPress={() => setBeardModalVisible(false)}
             >
               <Text style={styles.closeModalButtonText}>Close</Text>
             </Pressable>
