@@ -14,7 +14,7 @@ export const tips: Tip[] = [
     id: 'grooming-1',
     categoryId: 'grooming',
     title: 'Find Your Ideal Haircut',
-    description: 'Consult with a professional barber to find a haircut that complements your face shape. Square faces suit textured crops, round faces benefit from styles with height, and oval faces work with most styles.',
+    description: 'Upload a photo to get AI-powered haircut recommendations based on your face shape. Square faces suit textured crops, round faces benefit from styles with height, and oval faces work with most styles.',
     difficulty: 'beginner',
     timeRequired: '30-60 minutes',
     impact: 4,

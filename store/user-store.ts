@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserProfile, ProgressPhoto, Routine, AIAnalysisResult } from '@/types';
+import { UserProfile, ProgressPhoto, Routine, AIAnalysisResult, HaircutAnalysis } from '@/types';
 
 interface UserState {
   profile: UserProfile | null;
@@ -21,6 +21,7 @@ interface UserState {
   markTipCompleted: (tipId: string) => void;
   setOnboarded: (value: boolean) => void;
   setAIAnalysis: (results: AIAnalysisResult) => void;
+  setHaircutAnalysis: (analysis: HaircutAnalysis) => void;
 }
 
 export const useUserStore = create<UserState>()(
@@ -89,6 +90,13 @@ export const useUserStore = create<UserState>()(
           results
         }
       }),
+
+      setHaircutAnalysis: (analysis) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          haircutAnalysis: analysis
+        } : null
+      })),
     }),
     {
       name: 'level-up-user-storage',

@@ -1,26 +1,45 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable, Modal } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, Pressable, Modal, ActivityIndicator, Image, Platform } from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { tips } from '@/constants/tips';
 import { categories } from '@/constants/categories';
-import { Star, Clock, BarChart, Check, Plus, X } from 'lucide-react-native';
+import { Star, Clock, BarChart, Check, Plus, X, Camera, Brain, ArrowRight, RefreshCw } from 'lucide-react-native';
 import { useUserStore } from '@/store/user-store';
-import { Routine } from '@/types';
+import { Routine, HaircutSuggestion } from '@/types';
+import * as ImagePicker from 'expo-image-picker';
+import { trpc, trpcClient } from '@/lib/trpc';
 
 export default function TipDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const profile = useUserStore(state => state.profile);
   const markTipCompleted = useUserStore(state => state.markTipCompleted);
   const addRoutine = useUserStore(state => state.addRoutine);
+  const setHaircutAnalysis = useUserStore(state => state.setHaircutAnalysis);
   
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedFrequency, setSelectedFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  
+  const [haircutPhoto, setHaircutPhoto] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [haircutResults, setHaircutResults] = useState<any>(null);
+  const [haircutModalVisible, setHaircutModalVisible] = useState(false);
+  const [selectedHaircut, setSelectedHaircut] = useState<HaircutSuggestion | null>(null);
   
   const tip = tips.find(t => t.id === id);
   const category = tip ? categories.find(cat => cat.id === tip.categoryId) : null;
   
   const isCompleted = profile?.completedTips.includes(id || '');
+  const isHaircutTip = tip?.id === 'grooming-1'; // "Find Your Ideal Haircut" tip
+
+  // Check if we already have a haircut analysis
+  useEffect(() => {
+    if (isHaircutTip && profile?.haircutAnalysis) {
+      setHaircutResults(profile.haircutAnalysis);
+    }
+  }, [isHaircutTip, profile?.haircutAnalysis]);
 
   const handleMarkComplete = () => {
     if (!isCompleted && id) {
@@ -46,6 +65,67 @@ export default function TipDetailScreen() {
       addRoutine(newRoutine);
       setModalVisible(false);
     }
+  };
+
+  const handlePickHaircutPhoto = async () => {
+    try {
+      setPhotoError(null);
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setHaircutPhoto(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking haircut photo:', error);
+      setPhotoError('Failed to select image. Please try again.');
+    }
+  };
+
+  const analyzeHaircut = async () => {
+    if (!haircutPhoto) {
+      setPhotoError('Please upload a photo first');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setPhotoError(null);
+
+    try {
+      // Call the backend to analyze the haircut
+      const result = await trpcClient.haircut.analyze.mutate({
+        photoUri: haircutPhoto
+      });
+
+      // Store the results
+      setHaircutResults(result);
+      
+      // Save to user profile
+      setHaircutAnalysis({
+        photoUri: haircutPhoto,
+        faceShape: result.faceShape,
+        hairType: result.hairType,
+        hairLength: result.hairLength,
+        faceShapeDescription: result.suggestions.faceShapeDescription,
+        suggestions: result.suggestions.haircuts,
+        analysisDate: result.analysisDate
+      });
+
+    } catch (error) {
+      console.error('Error analyzing haircut:', error);
+      setPhotoError('Failed to analyze photo. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const openHaircutDetails = (haircut: HaircutSuggestion) => {
+    setSelectedHaircut(haircut);
+    setHaircutModalVisible(true);
   };
 
   // Render impact stars
@@ -108,6 +188,187 @@ export default function TipDetailScreen() {
         <Text style={styles.descriptionTitle}>How to do it</Text>
         <Text style={styles.description}>{tip.description}</Text>
       </View>
+      
+      {/* Haircut Analysis Section - Only show for the haircut tip */}
+      {isHaircutTip && (
+        <View style={styles.haircutContainer}>
+          <Text style={styles.haircutTitle}>Find Your Ideal Haircut with AI</Text>
+          <Text style={styles.haircutDescription}>
+            Upload a clear photo of your face to get personalized haircut recommendations based on your face shape and features.
+          </Text>
+          
+          {haircutResults ? (
+            <View style={styles.analysisResultsContainer}>
+              <View style={styles.photoResultRow}>
+                <View style={styles.uploadedPhotoContainer}>
+                  {Platform.OS === 'web' ? (
+                    <img 
+                      src={haircutResults.photoUri} 
+                      alt="Your photo" 
+                      style={{ 
+                        width: 100, 
+                        height: 100, 
+                        objectFit: 'cover', 
+                        borderRadius: 50 
+                      }}
+                    />
+                  ) : (
+                    <Image 
+                      source={{ uri: haircutResults.photoUri }} 
+                      style={styles.uploadedPhoto} 
+                    />
+                  )}
+                  <Text style={styles.photoLabel}>Your Photo</Text>
+                </View>
+                
+                <View style={styles.analysisDetails}>
+                  <Text style={styles.analysisDetail}>
+                    <Text style={styles.detailLabel}>Face Shape: </Text>
+                    <Text style={styles.detailValue}>{haircutResults.faceShape.charAt(0).toUpperCase() + haircutResults.faceShape.slice(1)}</Text>
+                  </Text>
+                  <Text style={styles.analysisDetail}>
+                    <Text style={styles.detailLabel}>Hair Type: </Text>
+                    <Text style={styles.detailValue}>{haircutResults.hairType.charAt(0).toUpperCase() + haircutResults.hairType.slice(1)}</Text>
+                  </Text>
+                  <Text style={styles.analysisDetail}>
+                    <Text style={styles.detailLabel}>Current Length: </Text>
+                    <Text style={styles.detailValue}>{haircutResults.hairLength.charAt(0).toUpperCase() + haircutResults.hairLength.slice(1)}</Text>
+                  </Text>
+                </View>
+              </View>
+              
+              <View style={styles.faceShapeContainer}>
+                <Text style={styles.faceShapeTitle}>Your Face Shape</Text>
+                <Text style={styles.faceShapeDescription}>
+                  {haircutResults.faceShapeDescription}
+                </Text>
+              </View>
+              
+              <Text style={styles.suggestionsTitle}>Recommended Haircuts</Text>
+              <Text style={styles.suggestionsSubtitle}>
+                Based on your face shape and hair type, here are some haircuts that would suit you well:
+              </Text>
+              
+              <View style={styles.haircutSuggestions}>
+                {haircutResults.suggestions.map((haircut: HaircutSuggestion, index: number) => (
+                  <Pressable 
+                    key={index}
+                    style={styles.haircutCard}
+                    onPress={() => openHaircutDetails(haircut)}
+                  >
+                    {Platform.OS === 'web' ? (
+                      <img 
+                        src={haircut.imageUrl} 
+                        alt={haircut.name} 
+                        style={{ 
+                          width: '100%', 
+                          height: 150, 
+                          objectFit: 'cover', 
+                          borderTopLeftRadius: 12,
+                          borderTopRightRadius: 12
+                        }}
+                      />
+                    ) : (
+                      <Image 
+                        source={{ uri: haircut.imageUrl }} 
+                        style={styles.haircutImage} 
+                      />
+                    )}
+                    <View style={styles.haircutCardContent}>
+                      <Text style={styles.haircutName}>{haircut.name}</Text>
+                      <Text style={styles.haircutMaintenance}>
+                        Maintenance: {haircut.maintenanceLevel}
+                      </Text>
+                      <Pressable style={styles.viewDetailsButton}>
+                        <Text style={styles.viewDetailsText}>View Details</Text>
+                        <ArrowRight size={16} color={Colors.dark.primary} />
+                      </Pressable>
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+              
+              <Pressable 
+                style={styles.newAnalysisButton}
+                onPress={() => {
+                  setHaircutPhoto(null);
+                  setHaircutResults(null);
+                }}
+              >
+                <RefreshCw size={18} color={Colors.dark.text} />
+                <Text style={styles.newAnalysisText}>Get New Analysis</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.haircutUploadContainer}>
+              {haircutPhoto ? (
+                <View style={styles.haircutPhotoPreview}>
+                  {Platform.OS === 'web' ? (
+                    <img 
+                      src={haircutPhoto} 
+                      alt="Haircut" 
+                      style={{ 
+                        width: 200, 
+                        height: 200, 
+                        objectFit: 'cover', 
+                        borderRadius: 100 
+                      }}
+                    />
+                  ) : (
+                    <Image 
+                      source={{ uri: haircutPhoto }} 
+                      style={styles.haircutPhotoImage} 
+                    />
+                  )}
+                  <View style={styles.photoActions}>
+                    <Pressable 
+                      style={styles.changePhotoButton}
+                      onPress={handlePickHaircutPhoto}
+                    >
+                      <Text style={styles.changePhotoText}>Change Photo</Text>
+                    </Pressable>
+                    
+                    <Pressable 
+                      style={styles.analyzeButton}
+                      onPress={analyzeHaircut}
+                      disabled={isAnalyzing}
+                    >
+                      {isAnalyzing ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <>
+                          <Brain size={16} color="#FFFFFF" />
+                          <Text style={styles.analyzeButtonText}>Analyze</Text>
+                        </>
+                      )}
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                <Pressable 
+                  style={styles.haircutUploadButton}
+                  onPress={handlePickHaircutPhoto}
+                >
+                  <Camera size={40} color={Colors.dark.primary} />
+                  <Text style={styles.haircutUploadText}>Upload a clear photo of your face</Text>
+                </Pressable>
+              )}
+              
+              {photoError && (
+                <Text style={styles.errorText}>{photoError}</Text>
+              )}
+              
+              <View style={styles.haircutTipsContainer}>
+                <Text style={styles.haircutTipsTitle}>Tips for a good photo:</Text>
+                <Text style={styles.haircutTip}>• Face the camera directly</Text>
+                <Text style={styles.haircutTip}>• Use good lighting</Text>
+                <Text style={styles.haircutTip}>• Keep a neutral expression</Text>
+                <Text style={styles.haircutTip}>• Show your current hairstyle clearly</Text>
+              </View>
+            </View>
+          )}
+        </View>
+      )}
       
       <View style={styles.buttonContainer}>
         <Pressable 
@@ -184,6 +445,92 @@ export default function TipDetailScreen() {
               onPress={handleConfirmAddToRoutine}
             >
               <Text style={styles.confirmButtonText}>Add to Routine</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Haircut Details Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={haircutModalVisible}
+        onRequestClose={() => setHaircutModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.haircutModalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{selectedHaircut?.name}</Text>
+              <Pressable onPress={() => setHaircutModalVisible(false)}>
+                <X size={24} color={Colors.dark.text} />
+              </Pressable>
+            </View>
+            
+            {selectedHaircut && (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {Platform.OS === 'web' ? (
+                  <img 
+                    src={selectedHaircut.imageUrl} 
+                    alt={selectedHaircut.name} 
+                    style={{ 
+                      width: '100%', 
+                      height: 250, 
+                      objectFit: 'cover', 
+                      borderRadius: 12,
+                      marginBottom: 16
+                    }}
+                  />
+                ) : (
+                  <Image 
+                    source={{ uri: selectedHaircut.imageUrl }} 
+                    style={styles.haircutDetailImage} 
+                  />
+                )}
+                
+                <View style={styles.haircutDetailSection}>
+                  <Text style={styles.haircutDetailTitle}>Description</Text>
+                  <Text style={styles.haircutDetailText}>{selectedHaircut.description}</Text>
+                </View>
+                
+                <View style={styles.haircutDetailSection}>
+                  <Text style={styles.haircutDetailTitle}>Why It Suits You</Text>
+                  <Text style={styles.haircutDetailText}>{selectedHaircut.suitability}</Text>
+                </View>
+                
+                <View style={styles.haircutDetailSection}>
+                  <Text style={styles.haircutDetailTitle}>Maintenance Level</Text>
+                  <Text style={styles.haircutDetailText}>{selectedHaircut.maintenanceLevel}</Text>
+                </View>
+                
+                <View style={styles.haircutDetailSection}>
+                  <Text style={styles.haircutDetailTitle}>How to Ask Your Barber</Text>
+                  <Text style={styles.haircutDetailText}>
+                    Show them this picture and ask for a {selectedHaircut.name.toLowerCase()}. Mention that you have a {haircutResults?.faceShape} face shape and {haircutResults?.hairType} hair. Discuss how much time you're willing to spend styling it daily.
+                  </Text>
+                </View>
+                
+                <View style={styles.haircutDetailSection}>
+                  <Text style={styles.haircutDetailTitle}>Styling Tips</Text>
+                  <Text style={styles.haircutDetailText}>
+                    {selectedHaircut.name.includes("Textured") ? 
+                      "Use a matte styling product like clay or paste. Apply to towel-dried hair and work through with your fingers for texture." :
+                    selectedHaircut.name.includes("Pompadour") || selectedHaircut.name.includes("Quiff") ?
+                      "Blow dry your hair while brushing it into the desired shape. Apply pomade or wax for hold and shine." :
+                    selectedHaircut.name.includes("Crop") ?
+                      "Apply a small amount of styling cream to damp hair and let it air dry for a natural finish." :
+                    selectedHaircut.name.includes("Side Part") ?
+                      "Use a comb to create a clean part. Apply pomade for a classic look or texture spray for a more casual style." :
+                    "Keep it simple with a light styling product. Ask your barber for specific product recommendations for your hair type."}
+                  </Text>
+                </View>
+              </ScrollView>
+            )}
+            
+            <Pressable 
+              style={styles.closeModalButton}
+              onPress={() => setHaircutModalVisible(false)}
+            >
+              <Text style={styles.closeModalButtonText}>Close</Text>
             </Pressable>
           </View>
         </View>
@@ -302,10 +649,11 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   errorText: {
-    fontSize: 18,
+    fontSize: 16,
     color: Colors.dark.error,
     textAlign: 'center',
-    marginTop: 24,
+    marginTop: 8,
+    marginBottom: 8,
   },
   modalContainer: {
     flex: 1,
@@ -318,6 +666,14 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     padding: 20,
     paddingBottom: 40,
+  },
+  haircutModalContent: {
+    backgroundColor: Colors.dark.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
+    maxHeight: '90%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -368,5 +724,259 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  // Haircut Analysis Styles
+  haircutContainer: {
+    backgroundColor: Colors.dark.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+  },
+  haircutTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.dark.text,
+    marginBottom: 8,
+  },
+  haircutDescription: {
+    fontSize: 16,
+    color: Colors.dark.text,
+    marginBottom: 16,
+    lineHeight: 22,
+  },
+  haircutUploadContainer: {
+    alignItems: 'center',
+  },
+  haircutUploadButton: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 2,
+    borderColor: Colors.dark.primary,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(99, 102, 241, 0.05)',
+    marginBottom: 16,
+  },
+  haircutUploadText: {
+    fontSize: 16,
+    color: Colors.dark.primary,
+    marginTop: 12,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
+  haircutTipsContainer: {
+    backgroundColor: 'rgba(99, 102, 241, 0.05)',
+    borderRadius: 8,
+    padding: 12,
+    width: '100%',
+    marginTop: 8,
+  },
+  haircutTipsTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: Colors.dark.primary,
+    marginBottom: 8,
+  },
+  haircutTip: {
+    fontSize: 14,
+    color: Colors.dark.text,
+    marginBottom: 4,
+  },
+  haircutPhotoPreview: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  haircutPhotoImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    marginBottom: 16,
+  },
+  photoActions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+    gap: 12,
+  },
+  changePhotoButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  changePhotoText: {
+    fontSize: 16,
+    color: Colors.dark.primary,
+  },
+  analyzeButton: {
+    backgroundColor: Colors.dark.primary,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  analyzeButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginLeft: 8,
+  },
+  // Analysis Results Styles
+  analysisResultsContainer: {
+    width: '100%',
+  },
+  photoResultRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  uploadedPhotoContainer: {
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  uploadedPhoto: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 4,
+  },
+  photoLabel: {
+    fontSize: 12,
+    color: Colors.dark.subtext,
+  },
+  analysisDetails: {
+    flex: 1,
+  },
+  analysisDetail: {
+    fontSize: 14,
+    color: Colors.dark.text,
+    marginBottom: 6,
+  },
+  detailLabel: {
+    fontWeight: 'bold',
+    color: Colors.dark.primary,
+  },
+  detailValue: {
+    color: Colors.dark.text,
+  },
+  faceShapeContainer: {
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  faceShapeTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.dark.primary,
+    marginBottom: 4,
+  },
+  faceShapeDescription: {
+    fontSize: 14,
+    color: Colors.dark.text,
+    lineHeight: 20,
+  },
+  suggestionsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.dark.text,
+    marginBottom: 4,
+  },
+  suggestionsSubtitle: {
+    fontSize: 14,
+    color: Colors.dark.subtext,
+    marginBottom: 16,
+  },
+  haircutSuggestions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  haircutCard: {
+    width: '48%',
+    backgroundColor: Colors.dark.background,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    marginBottom: 8,
+  },
+  haircutImage: {
+    width: '100%',
+    height: 150,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  haircutCardContent: {
+    padding: 12,
+  },
+  haircutName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.dark.text,
+    marginBottom: 4,
+  },
+  haircutMaintenance: {
+    fontSize: 12,
+    color: Colors.dark.subtext,
+    marginBottom: 8,
+  },
+  viewDetailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewDetailsText: {
+    fontSize: 14,
+    color: Colors.dark.primary,
+    marginRight: 4,
+  },
+  newAnalysisButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.dark.card,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+  },
+  newAnalysisText: {
+    fontSize: 16,
+    color: Colors.dark.text,
+    marginLeft: 8,
+  },
+  // Haircut Detail Modal Styles
+  haircutDetailImage: {
+    width: '100%',
+    height: 250,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  haircutDetailSection: {
+    marginBottom: 16,
+  },
+  haircutDetailTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.dark.primary,
+    marginBottom: 8,
+  },
+  haircutDetailText: {
+    fontSize: 16,
+    color: Colors.dark.text,
+    lineHeight: 22,
+  },
+  closeModalButton: {
+    backgroundColor: Colors.dark.card,
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  closeModalButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.dark.text,
   },
 });

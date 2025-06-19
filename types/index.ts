@@ -35,6 +35,7 @@ export type UserProfile = {
   progressPhotos: ProgressPhoto[];
   routines: Routine[];
   completedTips: string[];
+  haircutAnalysis?: HaircutAnalysis;
 };
 
 export type AIAnalysisResult = {
@@ -80,4 +81,22 @@ export type MotivationalGoal = {
   title: string;
   description: string;
   category: string;
+};
+
+export type HaircutSuggestion = {
+  name: string;
+  description: string;
+  suitability: string;
+  maintenanceLevel: string;
+  imageUrl: string;
+};
+
+export type HaircutAnalysis = {
+  photoUri: string;
+  faceShape: string;
+  hairType: string;
+  hairLength: string;
+  faceShapeDescription: string;
+  suggestions: HaircutSuggestion[];
+  analysisDate: string;
 };
