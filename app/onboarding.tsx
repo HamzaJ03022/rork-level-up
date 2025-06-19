@@ -1,14 +1,28 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, Pressable, ScrollView, Platform, Image, ActivityIndicator } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  TextInput, 
+  Pressable, 
+  ScrollView, 
+  Platform, 
+  Image, 
+  ActivityIndicator,
+  Animated,
+  Dimensions
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
-import { ChevronRight, X, Camera, Upload, Check, Brain } from 'lucide-react-native';
+import { ChevronRight, X, Camera, Upload, Check, Brain, ArrowRight, ChevronLeft } from 'lucide-react-native';
 import { UserProfile, AppearanceGoal } from '@/types';
 import * as ImagePicker from 'expo-image-picker';
 import { appearanceGoals } from '@/constants/appearance-goals';
 import { motivationalGoals } from '@/constants/motivational-goals';
 import { categories } from '@/constants/categories';
+
+const { width } = Dimensions.get('window');
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -47,6 +61,49 @@ export default function OnboardingScreen() {
   // Error states
   const [photoError, setPhotoError] = useState<string | null>(null);
   
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new Animated.Value(0.125)).current;
+
+  // Animate progress bar when step changes
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: step / 8,
+      duration: 300,
+      useNativeDriver: false
+    }).start();
+  }, [step]);
+
+  const animateTransition = (nextStep: number) => {
+    // Fade out
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true
+    }).start(() => {
+      // Change step
+      setStep(nextStep);
+      
+      // Reset slide position
+      slideAnim.setValue(width * 0.1);
+      
+      // Slide in and fade in
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true
+        })
+      ]).start();
+    });
+  };
+
   const handleNext = () => {
     if (step < 8) {
       // If we're on step 5 (routines) and moving to step 6 (AI analysis)
@@ -54,7 +111,7 @@ export default function OnboardingScreen() {
       if (step === 5) {
         performAIAnalysis();
       } else {
-        setStep(step + 1);
+        animateTransition(step + 1);
       }
     } else {
       completeOnboarding();
@@ -63,7 +120,15 @@ export default function OnboardingScreen() {
 
   const handleBack = () => {
     if (step > 1) {
-      setStep(step - 1);
+      animateTransition(step - 1);
+    }
+  };
+
+  const handleSkip = () => {
+    if (step === 2) { // Skip measurements
+      animateTransition(3);
+    } else if (step === 5) { // Skip current routines
+      performAIAnalysis();
     }
   };
 
@@ -231,11 +296,11 @@ export default function OnboardingScreen() {
       setAnalysisResults(mockAnalysis);
       setAIAnalysis(mockAnalysis);
       setAnalysisComplete(true);
-      setStep(6);
+      animateTransition(6);
     } catch (error) {
       console.error('Error during analysis:', error);
       // Move to next step anyway in case of error
-      setStep(6);
+      animateTransition(6);
     } finally {
       setIsAnalyzing(false);
     }
@@ -398,6 +463,31 @@ export default function OnboardingScreen() {
               placeholderTextColor={Colors.dark.inactive}
               autoFocus={Platform.OS !== 'web'}
             />
+            
+            <Text style={styles.label}>Age (optional)</Text>
+            <TextInput
+              style={styles.input}
+              value={age}
+              onChangeText={(text) => {
+                // Allow only numbers
+                if (/^\d*$/.test(text)) {
+                  setAge(text);
+                }
+              }}
+              placeholder="Enter your age"
+              placeholderTextColor={Colors.dark.inactive}
+              keyboardType="numeric"
+            />
+            
+            <View style={styles.welcomeImageContainer}>
+              <Image 
+                source={{ uri: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHBlcnNvbiUyMGNvbmZpZGVudHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60' }} 
+                style={styles.welcomeImage} 
+              />
+              <Text style={styles.welcomeText}>
+                Level Up helps you track your appearance transformation journey with personalized routines and progress tracking.
+              </Text>
+            </View>
           </View>
         );
       
@@ -501,6 +591,13 @@ export default function OnboardingScreen() {
             <Text style={styles.optionalText}>
               This information helps us provide more personalized advice. You can skip this step if you prefer.
             </Text>
+            
+            <View style={styles.measurementImageContainer}>
+              <Image 
+                source={{ uri: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bWVhc3VyZW1lbnR8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60' }} 
+                style={styles.measurementImage} 
+              />
+            </View>
           </View>
         );
       
@@ -556,6 +653,14 @@ export default function OnboardingScreen() {
                 <Text style={styles.changePhotoText}>Change Photo</Text>
               </Pressable>
             )}
+            
+            <View style={styles.photoTipsContainer}>
+              <Text style={styles.photoTipsTitle}>Tips for a good photo:</Text>
+              <Text style={styles.photoTip}>• Use natural lighting</Text>
+              <Text style={styles.photoTip}>• Face the camera directly</Text>
+              <Text style={styles.photoTip}>• Use a neutral expression</Text>
+              <Text style={styles.photoTip}>• Avoid filters or heavy editing</Text>
+            </View>
           </View>
         );
       
@@ -611,6 +716,14 @@ export default function OnboardingScreen() {
                 <Text style={styles.changePhotoText}>Change Photo</Text>
               </Pressable>
             )}
+            
+            <View style={styles.photoTipsContainer}>
+              <Text style={styles.photoTipsTitle}>Tips for a good photo:</Text>
+              <Text style={styles.photoTip}>• Stand against a plain background</Text>
+              <Text style={styles.photoTip}>• Wear fitted but comfortable clothing</Text>
+              <Text style={styles.photoTip}>• Stand with natural posture</Text>
+              <Text style={styles.photoTip}>• Use good lighting</Text>
+            </View>
           </View>
         );
       
@@ -804,42 +917,57 @@ export default function OnboardingScreen() {
               Now, select the improvement routines you want to focus on. We'll create daily routines for you.
             </Text>
             
-            {appearanceGoals.map((goal) => (
-              <Pressable 
-                key={goal.id}
-                style={[
-                  styles.goalCheckbox,
-                  selectedImprovementRoutines.includes(goal.id) && styles.goalCheckboxSelected
-                ]}
-                onPress={() => toggleImprovementRoutineSelection(goal.id)}
-              >
-                <View style={styles.checkboxContainer}>
-                  <View style={[
-                    styles.checkbox,
-                    selectedImprovementRoutines.includes(goal.id) && styles.checkboxSelected
-                  ]}>
-                    {selectedImprovementRoutines.includes(goal.id) && (
-                      <Check size={16} color="#FFFFFF" />
-                    )}
+            {appearanceGoals.map((goal) => {
+              // Find the category object to get the color
+              const categoryObj = categories.find(c => c.id === goal.category);
+              const categoryColor = categoryObj?.color || Colors.dark.primary;
+              
+              return (
+                <Pressable 
+                  key={goal.id}
+                  style={[
+                    styles.goalCheckbox,
+                    selectedImprovementRoutines.includes(goal.id) && [
+                      styles.goalCheckboxSelected,
+                      { borderColor: categoryColor, backgroundColor: `${categoryColor}10` }
+                    ]
+                  ]}
+                  onPress={() => toggleImprovementRoutineSelection(goal.id)}
+                >
+                  <View style={styles.checkboxContainer}>
+                    <View style={[
+                      styles.checkbox,
+                      selectedImprovementRoutines.includes(goal.id) && [
+                        styles.checkboxSelected,
+                        { backgroundColor: categoryColor, borderColor: categoryColor }
+                      ]
+                    ]}>
+                      {selectedImprovementRoutines.includes(goal.id) && (
+                        <Check size={16} color="#FFFFFF" />
+                      )}
+                    </View>
                   </View>
-                </View>
-                
-                <View style={styles.goalContent}>
-                  <Text style={styles.goalTitle}>{goal.title}</Text>
-                  <Text style={styles.goalDescription}>{goal.description}</Text>
-                  <View style={styles.goalMeta}>
-                    <Text style={styles.goalFrequency}>
-                      {goal.recommendedFrequency === 'daily' ? 'Daily' : 
-                       goal.recommendedFrequency === 'weekly' ? 'Weekly' : 'Monthly'}
-                    </Text>
-                    <Text style={styles.goalDifficulty}>
-                      {goal.difficulty === 'easy' ? 'Easy' : 
-                       goal.difficulty === 'medium' ? 'Medium' : 'Hard'}
-                    </Text>
+                  
+                  <View style={styles.goalContent}>
+                    <Text style={styles.goalTitle}>{goal.title}</Text>
+                    <Text style={styles.goalDescription}>{goal.description}</Text>
+                    <View style={styles.goalMeta}>
+                      <Text style={[styles.goalFrequency, { color: categoryColor, backgroundColor: `${categoryColor}15` }]}>
+                        {goal.recommendedFrequency === 'daily' ? 'Daily' : 
+                         goal.recommendedFrequency === 'weekly' ? 'Weekly' : 'Monthly'}
+                      </Text>
+                      <Text style={styles.goalDifficulty}>
+                        {goal.difficulty === 'easy' ? 'Easy' : 
+                         goal.difficulty === 'medium' ? 'Medium' : 'Hard'}
+                      </Text>
+                      <Text style={styles.goalTimeRequired}>
+                        {goal.timeRequired}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              </Pressable>
-            ))}
+                </Pressable>
+              );
+            })}
             
             <Text style={styles.selectionCount}>
               {selectedImprovementRoutines.length} {selectedImprovementRoutines.length === 1 ? 'routine' : 'routines'} selected
@@ -880,17 +1008,41 @@ export default function OnboardingScreen() {
     }
   };
 
+  const canSkip = () => {
+    return step === 2 || step === 5;
+  };
+
   return (
     <View style={styles.container}>
+      {/* Progress bar */}
+      <View style={styles.progressBarContainer}>
+        <Animated.View 
+          style={[
+            styles.progressBar,
+            { width: progressAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0%', '100%']
+              }) 
+            }
+          ]} 
+        />
+      </View>
+      
       <View style={styles.header}>
         <Text style={styles.stepText}>Step {step} of 8</Text>
         <Text style={styles.title}>{getStepTitle()}</Text>
         <Text style={styles.subtitle}>{getStepSubtitle()}</Text>
       </View>
       
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-        {renderStepContent()}
-      </ScrollView>
+      <Animated.ScrollView 
+        style={[styles.content, { opacity: fadeAnim }]}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View style={{ transform: [{ translateX: slideAnim }] }}>
+          {renderStepContent()}
+        </Animated.View>
+      </Animated.ScrollView>
       
       <View style={styles.footer}>
         {step > 1 && step !== 6 && (
@@ -898,7 +1050,17 @@ export default function OnboardingScreen() {
             style={styles.backButton}
             onPress={handleBack}
           >
+            <ChevronLeft size={20} color={Colors.dark.text} />
             <Text style={styles.backButtonText}>Back</Text>
+          </Pressable>
+        )}
+        
+        {canSkip() && (
+          <Pressable 
+            style={styles.skipButton}
+            onPress={handleSkip}
+          >
+            <Text style={styles.skipButtonText}>Skip</Text>
           </Pressable>
         )}
         
@@ -913,7 +1075,11 @@ export default function OnboardingScreen() {
           <Text style={styles.nextButtonText}>
             {step < 8 ? 'Next' : 'Get Started'}
           </Text>
-          <ChevronRight size={20} color="#FFFFFF" />
+          {step < 8 ? (
+            <ChevronRight size={20} color="#FFFFFF" />
+          ) : (
+            <ArrowRight size={20} color="#FFFFFF" />
+          )}
         </Pressable>
       </View>
     </View>
@@ -924,6 +1090,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.dark.background,
+  },
+  progressBarContainer: {
+    height: 4,
+    backgroundColor: Colors.dark.card,
+    width: '100%',
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: Colors.dark.primary,
   },
   header: {
     padding: 24,
@@ -963,10 +1138,27 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: Colors.dark.card,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
     fontSize: 16,
     color: Colors.dark.text,
+    marginBottom: 16,
+  },
+  welcomeImageContainer: {
+    marginTop: 24,
+    alignItems: 'center',
+  },
+  welcomeImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    marginBottom: 16,
+  },
+  welcomeText: {
+    fontSize: 16,
+    color: Colors.dark.subtext,
+    textAlign: 'center',
+    lineHeight: 24,
   },
   measurementsContainer: {
     marginBottom: 24,
@@ -981,7 +1173,7 @@ const styles = StyleSheet.create({
   measurementInput: {
     flex: 1,
     backgroundColor: Colors.dark.card,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
     fontSize: 16,
     color: Colors.dark.text,
@@ -990,7 +1182,7 @@ const styles = StyleSheet.create({
   unitSelector: {
     flexDirection: 'row',
     backgroundColor: Colors.dark.card,
-    borderRadius: 8,
+    borderRadius: 12,
     overflow: 'hidden',
   },
   unitButton: {
@@ -1015,6 +1207,15 @@ const styles = StyleSheet.create({
     color: Colors.dark.subtext,
     marginTop: 16,
     fontStyle: 'italic',
+  },
+  measurementImageContainer: {
+    marginTop: 24,
+    alignItems: 'center',
+  },
+  measurementImage: {
+    width: 200,
+    height: 150,
+    borderRadius: 12,
   },
   photoContainer: {
     alignItems: 'center',
@@ -1082,6 +1283,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.dark.error,
     marginTop: 8,
+  },
+  photoTipsContainer: {
+    marginTop: 24,
+    backgroundColor: 'rgba(99, 102, 241, 0.05)',
+    borderRadius: 12,
+    padding: 16,
+    width: '100%',
+  },
+  photoTipsTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: Colors.dark.primary,
+    marginBottom: 8,
+  },
+  photoTip: {
+    fontSize: 14,
+    color: Colors.dark.text,
+    marginBottom: 4,
   },
   routinesContainer: {
     marginBottom: 24,
@@ -1286,23 +1505,37 @@ const styles = StyleSheet.create({
   },
   goalMeta: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
   },
   goalFrequency: {
     fontSize: 12,
     color: Colors.dark.primary,
     backgroundColor: 'rgba(99, 102, 241, 0.1)',
-    paddingVertical: 2,
+    paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 4,
     marginRight: 8,
+    marginBottom: 4,
+    overflow: 'hidden',
   },
   goalDifficulty: {
     fontSize: 12,
     color: Colors.dark.warning,
     backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    paddingVertical: 2,
+    paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 4,
+    marginRight: 8,
+    marginBottom: 4,
+  },
+  goalTimeRequired: {
+    fontSize: 12,
+    color: Colors.dark.success,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    marginBottom: 4,
   },
   selectionCount: {
     fontSize: 14,
@@ -1319,18 +1552,29 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.dark.border,
   },
   backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 24,
-    marginRight: 12,
+    paddingHorizontal: 16,
+    marginRight: 8,
   },
   backButtonText: {
     fontSize: 16,
     color: Colors.dark.text,
+    marginLeft: 4,
+  },
+  skipButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  skipButtonText: {
+    fontSize: 16,
+    color: Colors.dark.subtext,
   },
   nextButton: {
     flex: 1,
     backgroundColor: Colors.dark.primary,
-    borderRadius: 8,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
