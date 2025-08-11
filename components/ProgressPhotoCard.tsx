@@ -13,11 +13,11 @@ type ProgressPhotoCardProps = {
 const ProgressPhotoCard = ({ photo, onPress }: ProgressPhotoCardProps) => {
   const removeProgressPhoto = useUserStore(state => state.removeProgressPhoto);
   
-  const formattedDate = new Date(photo.date).toLocaleDateString('en-US', {
+  const formattedDate = photo?.date ? new Date(photo.date).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  });
+  }) : 'Unknown date';
 
   const handleDelete = () => {
     removeProgressPhoto(photo.id);
@@ -31,7 +31,7 @@ const ProgressPhotoCard = ({ photo, onPress }: ProgressPhotoCardProps) => {
       ]}
       onPress={() => onPress(photo)}
     >
-      <Image source={{ uri: photo.uri }} style={styles.image} />
+      <Image source={{ uri: photo?.uri || '' }} style={styles.image} />
       
       <View style={styles.overlay}>
         <View style={styles.dateContainer}>

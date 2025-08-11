@@ -40,28 +40,28 @@ export const useUserStore = create<UserState>()(
       addProgressPhoto: (photo) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
-          progressPhotos: [photo, ...state.profile.progressPhotos]
+          progressPhotos: [photo, ...(state.profile.progressPhotos || [])]
         } : null
       })),
       
       removeProgressPhoto: (id) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
-          progressPhotos: state.profile.progressPhotos.filter(photo => photo.id !== id)
+          progressPhotos: (state.profile.progressPhotos || []).filter(photo => photo.id !== id)
         } : null
       })),
       
       addRoutine: (routine) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
-          routines: [...state.profile.routines, routine]
+          routines: [...(state.profile.routines || []), routine]
         } : null
       })),
       
       toggleRoutineCompletion: (id, completed) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
-          routines: state.profile.routines.map(routine => 
+          routines: (state.profile.routines || []).map(routine => 
             routine.id === id 
               ? { ...routine, completed, lastCompleted: completed ? new Date().toISOString() : routine.lastCompleted } 
               : routine
@@ -72,14 +72,14 @@ export const useUserStore = create<UserState>()(
       removeRoutine: (id) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
-          routines: state.profile.routines.filter(routine => routine.id !== id)
+          routines: (state.profile.routines || []).filter(routine => routine.id !== id)
         } : null
       })),
       
       markTipCompleted: (tipId) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
-          completedTips: [...state.profile.completedTips, tipId]
+          completedTips: [...(state.profile.completedTips || []), tipId]
         } : null
       })),
       

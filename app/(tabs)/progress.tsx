@@ -4,6 +4,7 @@ import { Stack, useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
 import ProgressPhotoCard from '@/components/ProgressPhotoCard';
+import SafeWrapper from '@/components/SafeWrapper';
 import { Camera, Plus, X } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { ProgressPhoto } from '@/types';
@@ -27,11 +28,12 @@ export default function ProgressScreen() {
       });
       
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setSelectedImage(result.assets[0].uri);
+        setSelectedImage(result.assets[0]?.uri || null);
         setModalVisible(true);
       }
     } catch (error) {
       console.error('Error picking image:', error);
+      // Show user-friendly error message
     }
   };
 
@@ -63,8 +65,9 @@ export default function ProgressScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen 
+    <SafeWrapper>
+      <View style={styles.container}>
+        <Stack.Screen 
         options={{ 
           title: "Progress Photos",
           headerRight: () => (
@@ -79,7 +82,7 @@ export default function ProgressScreen() {
       />
       
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        {profile?.progressPhotos && profile.progressPhotos.length > 0 ? (
+        {profile?.progressPhotos && Array.isArray(profile.progressPhotos) && profile.progressPhotos.length > 0 ? (
           <View style={styles.photoGrid}>
             {profile.progressPhotos.map(photo => (
               <ProgressPhotoCard 
@@ -165,8 +168,9 @@ export default function ProgressScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </SafeWrapper>
   );
 }
 

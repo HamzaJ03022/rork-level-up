@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
 import RoutineItem from '@/components/RoutineItem';
+import SafeWrapper from '@/components/SafeWrapper';
 import { Plus, X, Calendar, Clock } from 'lucide-react-native';
 import { categories } from '@/constants/categories';
 import { Routine } from '@/types';
@@ -22,7 +23,7 @@ export default function RoutinesScreen() {
   
   const [showCompleted, setShowCompleted] = useState(true);
   
-  const frequencies: Array<'daily' | 'weekly' | 'monthly'> = ['daily', 'weekly', 'monthly'];
+  const frequencies: ('daily' | 'weekly' | 'monthly')[] = ['daily', 'weekly', 'monthly'];
 
   const handleAddRoutine = () => {
     if (newRoutineTitle.trim() && selectedCategory && selectedFrequency) {
@@ -53,7 +54,7 @@ export default function RoutinesScreen() {
   };
 
   // Filter routines based on showCompleted state
-  const filteredRoutines = profile?.routines.filter(routine => 
+  const filteredRoutines = profile?.routines?.filter(routine => 
     showCompleted ? true : !routine.completed
   ) || [];
 
@@ -75,8 +76,9 @@ export default function RoutinesScreen() {
   });
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen 
+    <SafeWrapper>
+      <View style={styles.container}>
+        <Stack.Screen 
         options={{ 
           title: "Daily Routines",
           headerRight: () => (
@@ -151,9 +153,9 @@ export default function RoutinesScreen() {
           </Text>
           
           {appearanceGoals
-            .filter(goal => !profile?.selectedImprovementRoutines?.includes(goal.id))
-            .slice(0, 3)
-            .map(goal => (
+            ?.filter(goal => !profile?.selectedImprovementRoutines?.includes(goal.id))
+            ?.slice(0, 3)
+            ?.map(goal => (
               <View key={goal.id} style={styles.suggestionCard}>
                 <View style={styles.suggestionHeader}>
                   <Text style={styles.suggestionTitle}>{goal.title}</Text>
@@ -278,8 +280,9 @@ export default function RoutinesScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </SafeWrapper>
   );
 }
 

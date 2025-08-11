@@ -1,15 +1,15 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { categories } from '@/constants/categories';
 import { tips } from '@/constants/tips';
 import CategoryCard from '@/components/CategoryCard';
 import TipCard from '@/components/TipCard';
 import AIAdviceCard from '@/components/AIAdviceCard';
+import SafeWrapper from '@/components/SafeWrapper';
 import { useUserStore } from '@/store/user-store';
-import { CheckCircle2, Calendar, ArrowRight } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { CheckCircle2, ArrowRight } from 'lucide-react-native';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function HomeScreen() {
   
   // Get 3 random tips that haven't been completed yet
   const getRecommendedTips = () => {
-    if (!profile) return [];
+    if (!profile || !profile.completedTips) return [];
     
     const uncompletedTips = tips.filter(tip => !profile.completedTips.includes(tip.id));
     const shuffled = [...uncompletedTips].sort(() => 0.5 - Math.random());
@@ -34,7 +34,7 @@ export default function HomeScreen() {
 
   // Get daily routines
   const getDailyRoutines = () => {
-    if (!profile) return [];
+    if (!profile || !profile.routines) return [];
     return profile.routines.filter(routine => 
       routine.frequency === 'daily' && !routine.completed
     ).slice(0, 3);
@@ -42,12 +42,13 @@ export default function HomeScreen() {
 
   const recommendedTips = getRecommendedTips();
   const dailyRoutines = getDailyRoutines();
-  const completedRoutinesCount = profile?.routines.filter(r => r.completed).length || 0;
-  const totalRoutinesCount = profile?.routines.length || 0;
+  const completedRoutinesCount = profile?.routines?.filter(r => r.completed)?.length || 0;
+  const totalRoutinesCount = profile?.routines?.length || 0;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Stack.Screen options={{ title: "Level Up" }} />
+    <SafeWrapper>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <Stack.Screen options={{ title: "Level Up" }} />
       
       <View style={styles.header}>
         <Text style={styles.greeting}>
@@ -59,7 +60,7 @@ export default function HomeScreen() {
       {/* Progress Summary */}
       <View style={styles.progressCard}>
         <View style={styles.progressHeader}>
-          <Text style={styles.progressTitle}>Today's Progress</Text>
+          <Text style={styles.progressTitle}>Today&apos;s Progress</Text>
           <View style={styles.progressBadge}>
             <CheckCircle2 size={14} color={Colors.dark.success} />
             <Text style={styles.progressBadgeText}>
@@ -115,16 +116,17 @@ export default function HomeScreen() {
       ) : (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>
-            You've completed all tips! Great job!
+            You&apos;ve completed all tips! Great job!
           </Text>
         </View>
       )}
       
       <Text style={styles.sectionTitle}>Categories</Text>
-      {categories.map(category => (
-        <CategoryCard key={category.id} category={category} />
-      ))}
-    </ScrollView>
+        {categories.map(category => (
+          <CategoryCard key={category.id} category={category} />
+        ))}
+      </ScrollView>
+    </SafeWrapper>
   );
 }
 
