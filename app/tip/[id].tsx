@@ -498,7 +498,7 @@ export default function TipDetailScreen() {
               <View style={styles.faceShapeContainer}>
                 <Text style={styles.faceShapeTitle}>Your Face Shape</Text>
                 <Text style={styles.faceShapeDescription}>
-                  {beardResults.suggestions.faceShapeDescription}
+                  {beardResults.faceShapeDescription}
                 </Text>
               </View>
               
