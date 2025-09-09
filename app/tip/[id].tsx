@@ -6,7 +6,7 @@ import { tips } from '@/constants/tips';
 import { categories } from '@/constants/categories';
 import { Star, Clock, BarChart, Check, Plus, X, Camera, Brain, ArrowRight, RefreshCw } from 'lucide-react-native';
 import { useUserStore } from '@/store/user-store';
-import { Routine, HaircutSuggestion, BeardStyleSuggestion } from '@/types';
+import { Routine, HaircutSuggestion, BeardStyleSuggestion, HaircutAnalysis, BeardAnalysis } from '@/types';
 import * as ImagePicker from 'expo-image-picker';
 import { trpc, trpcClient } from '@/lib/trpc';
 
@@ -24,18 +24,18 @@ export default function TipDetailScreen() {
   
   // Haircut analysis states
   const [haircutPhoto, setHaircutPhoto] = useState<string | null>(null);
-  const [isAnalyzingHaircut, setIsAnalyzingHaircut] = useState(false);
+  const [isAnalyzingHaircut, setIsAnalyzingHaircut] = useState<boolean>(false);
   const [haircutPhotoError, setHaircutPhotoError] = useState<string | null>(null);
-  const [haircutResults, setHaircutResults] = useState<any>(null);
-  const [haircutModalVisible, setHaircutModalVisible] = useState(false);
+  const [haircutResults, setHaircutResults] = useState<HaircutAnalysis | null>(null);
+  const [haircutModalVisible, setHaircutModalVisible] = useState<boolean>(false);
   const [selectedHaircut, setSelectedHaircut] = useState<HaircutSuggestion | null>(null);
   
   // Beard analysis states
   const [beardPhoto, setBeardPhoto] = useState<string | null>(null);
-  const [isAnalyzingBeard, setIsAnalyzingBeard] = useState(false);
+  const [isAnalyzingBeard, setIsAnalyzingBeard] = useState<boolean>(false);
   const [beardPhotoError, setBeardPhotoError] = useState<string | null>(null);
-  const [beardResults, setBeardResults] = useState<any>(null);
-  const [beardModalVisible, setBeardModalVisible] = useState(false);
+  const [beardResults, setBeardResults] = useState<BeardAnalysis | null>(null);
+  const [beardModalVisible, setBeardModalVisible] = useState<boolean>(false);
   const [selectedBeardStyle, setSelectedBeardStyle] = useState<BeardStyleSuggestion | null>(null);
   
   const tip = tips.find(t => t.id === id);
@@ -111,25 +111,24 @@ export default function TipDetailScreen() {
     setHaircutPhotoError(null);
 
     try {
-      // Call the backend to analyze the haircut
+      console.log('[Haircut] Sending analyze request');
       const result = await trpcClient.haircut.analyze.mutate({
-        photoUri: haircutPhoto
-      });
-
-      // Store the results
-      setHaircutResults(result);
-      
-      // Save to user profile
-      setHaircutAnalysis({
         photoUri: haircutPhoto,
-        faceShape: result.faceShape,
-        hairType: result.hairType,
-        hairLength: result.hairLength,
-        faceShapeDescription: result.suggestions.faceShapeDescription,
-        suggestions: result.suggestions.haircuts,
-        analysisDate: result.analysisDate
       });
+      console.log('[Haircut] Result', result);
 
+      const normalized: HaircutAnalysis = {
+        photoUri: haircutPhoto,
+        faceShape: result?.faceShape ?? 'oval',
+        hairType: result?.hairType ?? 'straight',
+        hairLength: result?.hairLength ?? 'medium',
+        faceShapeDescription: result?.suggestions?.faceShapeDescription ?? '',
+        suggestions: result?.suggestions?.haircuts ?? [],
+        analysisDate: result?.analysisDate ?? new Date().toISOString(),
+      };
+
+      setHaircutResults(normalized);
+      setHaircutAnalysis(normalized);
     } catch (error) {
       console.error('Error analyzing haircut:', error);
       setHaircutPhotoError('Failed to analyze photo. Please try again.');
@@ -173,25 +172,24 @@ export default function TipDetailScreen() {
     setBeardPhotoError(null);
 
     try {
-      // Call the backend to analyze the beard
+      console.log('[Beard] Sending analyze request');
       const result = await trpcClient.beard.analyze.mutate({
-        photoUri: beardPhoto
-      });
-
-      // Store the results
-      setBeardResults(result);
-      
-      // Save to user profile
-      setBeardAnalysis({
         photoUri: beardPhoto,
-        faceShape: result.faceShape,
-        beardDensity: result.beardDensity,
-        currentStyle: result.currentStyle,
-        faceShapeDescription: result.suggestions.faceShapeDescription,
-        suggestions: result.suggestions.beardStyles,
-        analysisDate: result.analysisDate
       });
+      console.log('[Beard] Result', result);
 
+      const normalized: BeardAnalysis = {
+        photoUri: beardPhoto,
+        faceShape: result?.faceShape ?? 'oval',
+        beardDensity: result?.beardDensity ?? 'medium',
+        currentStyle: result?.currentStyle ?? 'stubble',
+        faceShapeDescription: result?.suggestions?.faceShapeDescription ?? '',
+        suggestions: result?.suggestions?.beardStyles ?? [],
+        analysisDate: result?.analysisDate ?? new Date().toISOString(),
+      };
+
+      setBeardResults(normalized);
+      setBeardAnalysis(normalized);
     } catch (error) {
       console.error('Error analyzing beard:', error);
       setBeardPhotoError('Failed to analyze photo. Please try again.');
@@ -327,9 +325,9 @@ export default function TipDetailScreen() {
               </Text>
               
               <View style={styles.haircutSuggestions}>
-                {haircutResults.suggestions.map((haircut: HaircutSuggestion, index: number) => (
+                {haircutResults.suggestions.map((haircut: HaircutSuggestion) => (
                   <Pressable 
-                    key={index}
+                    key={haircut.name}
                     style={styles.haircutCard}
                     onPress={() => openHaircutDetails(haircut)}
                   >
@@ -406,6 +404,7 @@ export default function TipDetailScreen() {
                     </Pressable>
                     
                     <Pressable 
+                      testID="haircut-analyze-button"
                       style={styles.analyzeButton}
                       onPress={analyzeHaircut}
                       disabled={isAnalyzingHaircut}
@@ -423,6 +422,7 @@ export default function TipDetailScreen() {
                 </View>
               ) : (
                 <Pressable 
+                  testID="haircut-upload-button"
                   style={styles.haircutUploadButton}
                   onPress={handlePickHaircutPhoto}
                 >
@@ -508,9 +508,9 @@ export default function TipDetailScreen() {
               </Text>
               
               <View style={styles.haircutSuggestions}>
-                {beardResults.suggestions.beardStyles.map((style: BeardStyleSuggestion, index: number) => (
+                {beardResults.suggestions.map((style: BeardStyleSuggestion) => (
                   <Pressable 
-                    key={index}
+                    key={style.name}
                     style={styles.haircutCard}
                     onPress={() => openBeardDetails(style)}
                   >
@@ -587,6 +587,7 @@ export default function TipDetailScreen() {
                     </Pressable>
                     
                     <Pressable 
+                      testID="beard-analyze-button"
                       style={styles.analyzeButton}
                       onPress={analyzeBeard}
                       disabled={isAnalyzingBeard}
@@ -604,6 +605,7 @@ export default function TipDetailScreen() {
                 </View>
               ) : (
                 <Pressable 
+                  testID="beard-upload-button"
                   style={styles.haircutUploadButton}
                   onPress={handlePickBeardPhoto}
                 >
