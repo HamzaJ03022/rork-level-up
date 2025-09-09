@@ -24,8 +24,8 @@ export default function ProfileScreen() {
     ? Math.floor((new Date().getTime() - new Date(profile.startDate).getTime()) / (1000 * 60 * 60 * 24))
     : 0;
   
-  const completedTipsCount = profile?.completedTips.length || 0;
-  const selectedGoalsCount = profile?.selectedGoals.length || 0;
+  const completedTipsCount = profile?.completedTips?.length || 0;
+  const selectedGoalsCount = profile?.selectedImprovementRoutines?.length || 0;
   const currentRoutinesCount = profile?.currentRoutines?.length || 0;
   
   const formatHeight = () => {
@@ -78,8 +78,8 @@ export default function ProfileScreen() {
   };
 
   // Get selected appearance goals
-  const selectedGoalDetails = profile?.selectedGoals
-    ? profile.selectedGoals.map(goalId => 
+  const selectedGoalDetails = profile?.selectedImprovementRoutines
+    ? profile.selectedImprovementRoutines.map(goalId => 
         appearanceGoals.find(goal => goal.id === goalId)
       ).filter(Boolean)
     : [];
@@ -174,7 +174,7 @@ export default function ProfileScreen() {
           <Text style={styles.infoValue}>{startDate}</Text>
         </View>
         
-        <Text style={styles.sectionTitle}>Your Appearance Goals</Text>
+        <Text style={styles.sectionTitle}>Your Improvement Routines</Text>
         {selectedGoalDetails.length > 0 ? (
           <View style={styles.goalsContainer}>
             {selectedGoalDetails.map((goal, index) => (

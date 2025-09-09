@@ -80,7 +80,7 @@ export default function RoutinesScreen() {
       <View style={styles.container}>
         <Stack.Screen 
         options={{ 
-          title: "Daily Routines",
+          title: "Improvement Routines",
           headerRight: () => (
             <Pressable 
               onPress={() => setModalVisible(true)}
