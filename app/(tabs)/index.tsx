@@ -47,10 +47,10 @@ export default function HomeScreen() {
 
   return (
     <SafeWrapper>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} testID="home-scroll">
         <Stack.Screen options={{ title: "Level Up" }} />
       
-      <View style={styles.header}>
+      <View style={styles.header} testID="home-header">
         <Text style={styles.greeting}>
           Hello, {profile?.name || 'there'}!
         </Text>
@@ -58,7 +58,7 @@ export default function HomeScreen() {
       </View>
       
       {/* Progress Summary */}
-      <View style={styles.progressCard}>
+      <View style={styles.progressCard} testID="home-progress-card">
         <View style={styles.progressHeader}>
           <Text style={styles.progressTitle}>Today&apos;s Progress</Text>
           <View style={styles.progressBadge}>
@@ -85,6 +85,7 @@ export default function HomeScreen() {
             
             <Pressable 
               style={styles.viewAllButton}
+              testID="home-view-all-routines"
               onPress={() => router.push('/routines')}
             >
               <Text style={styles.viewAllText}>View All Routines</Text>
@@ -98,6 +99,7 @@ export default function HomeScreen() {
             </Text>
             <Pressable 
               style={styles.addRoutinesButton}
+              testID="home-go-to-routines"
               onPress={() => router.push('/routines')}
             >
               <Text style={styles.addRoutinesText}>Go to Routines</Text>

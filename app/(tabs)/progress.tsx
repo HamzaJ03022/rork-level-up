@@ -81,7 +81,7 @@ export default function ProgressScreen() {
         }} 
       />
       
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content} testID="progress-scroll">
         {profile?.progressPhotos && Array.isArray(profile.progressPhotos) && profile.progressPhotos.length > 0 ? (
           <View style={styles.photoGrid}>
             {profile.progressPhotos.map(photo => (
@@ -94,7 +94,7 @@ export default function ProgressScreen() {
           </View>
         ) : (
           <View style={styles.emptyState}>
-            <Camera size={64} color={Colors.dark.inactive} />
+            <Camera size={64} color={Colors.dark.inactive} testID="progress-empty-icon" />
             <Text style={styles.emptyStateTitle}>No progress photos yet</Text>
             <Text style={styles.emptyStateText}>
               Take photos regularly to track your progress and see your transformation over time.
@@ -102,6 +102,7 @@ export default function ProgressScreen() {
             <Pressable 
               style={styles.addButton}
               onPress={handleAddPhoto}
+              testID="progress-add-photo"
             >
               <Text style={styles.addButtonText}>Add Your First Photo</Text>
             </Pressable>
@@ -115,11 +116,12 @@ export default function ProgressScreen() {
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
+        testID="progress-add-photo-modal"
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Progress Photo</Text>
+              <Text style={styles.modalTitle} testID="progress-modal-title">Add Progress Photo</Text>
               <Pressable onPress={() => setModalVisible(false)}>
                 <X size={24} color={Colors.dark.text} />
               </Pressable>
@@ -136,13 +138,7 @@ export default function ProgressScreen() {
                     />
                   ) : (
                     <View 
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        borderRadius: 12,
-                        backgroundColor: Colors.dark.card,
-                        // This is a placeholder for native since we can't actually show the image in this environment
-                      }} 
+                      style={styles.nativeImagePlaceholder}
                     />
                   )}
                 </View>
@@ -158,11 +154,13 @@ export default function ProgressScreen() {
               placeholderTextColor={Colors.dark.inactive}
               multiline
               numberOfLines={3}
+              testID="progress-notes-input"
             />
             
             <Pressable 
               style={styles.saveButton}
               onPress={handleSavePhoto}
+              testID="progress-save-photo"
             >
               <Text style={styles.saveButtonText}>Save Photo</Text>
             </Pressable>
@@ -270,6 +268,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     height: 80,
     textAlignVertical: 'top',
+  },
+  nativeImagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+    backgroundColor: Colors.dark.card,
   },
   saveButton: {
     backgroundColor: Colors.dark.primary,

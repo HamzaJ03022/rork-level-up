@@ -63,6 +63,7 @@ const TipCard = ({ tip }: TipCardProps) => {
 
   return (
     <Pressable 
+      testID={`tip-card-${tip.id}`}
       style={({ pressed }) => [
         styles.container,
         { opacity: pressed ? 0.9 : 1 }
@@ -73,6 +74,7 @@ const TipCard = ({ tip }: TipCardProps) => {
         <Text style={styles.title}>{tip.title}</Text>
         <View style={styles.actions}>
           <Pressable 
+            testID={`tip-add-to-routine-${tip.id}`}
             style={styles.addButton}
             onPress={handleAddToRoutine}
             hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
@@ -81,6 +83,7 @@ const TipCard = ({ tip }: TipCardProps) => {
           </Pressable>
           
           <Pressable 
+            testID={`tip-mark-complete-${tip.id}`}
             style={[
               styles.completedButton,
               isCompleted ? styles.completedButtonActive : {}

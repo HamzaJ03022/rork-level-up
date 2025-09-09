@@ -162,6 +162,7 @@ export default function ProductDetailScreen() {
         <Pressable 
           style={styles.addToCartButton}
           onPress={handleAddToCart}
+          testID="product-add-to-cart"
         >
           {addedToCart ? (
             <>

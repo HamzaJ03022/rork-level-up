@@ -25,13 +25,20 @@ const ProgressPhotoCard = ({ photo, onPress }: ProgressPhotoCardProps) => {
 
   return (
     <Pressable 
+      testID={`progress-photo-${photo.id}`}
       style={({ pressed }) => [
         styles.container,
         { opacity: pressed ? 0.9 : 1 }
       ]}
       onPress={() => onPress(photo)}
     >
-      <Image source={{ uri: photo?.uri || '' }} style={styles.image} />
+      {photo?.uri ? (
+        <Image source={{ uri: photo.uri }} style={styles.image} />
+      ) : (
+        <View style={[styles.image, { justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.dark.card }]}> 
+          <Text style={{ color: Colors.dark.subtext, fontSize: 12 }}>No image</Text>
+        </View>
+      )}
       
       <View style={styles.overlay}>
         <View style={styles.dateContainer}>
@@ -46,6 +53,7 @@ const ProgressPhotoCard = ({ photo, onPress }: ProgressPhotoCardProps) => {
         )}
         
         <Pressable 
+          testID={`delete-progress-photo-${photo.id}`}
           style={styles.deleteButton}
           onPress={handleDelete}
           hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}

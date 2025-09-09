@@ -29,6 +29,7 @@ const CategoryCard = ({ category }: CategoryCardProps) => {
 
   return (
     <Pressable 
+      testID={`category-card-${category.id}`}
       style={({ pressed }) => [
         styles.container,
         { opacity: pressed ? 0.9 : 1 }

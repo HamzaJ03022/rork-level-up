@@ -92,10 +92,10 @@ export default function RoutinesScreen() {
         }} 
       />
       
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content} testID="routines-scroll">
         <View style={styles.dateHeader}>
           <Calendar size={20} color={Colors.dark.primary} />
-          <Text style={styles.dateText}>{formattedDate}</Text>
+          <Text style={styles.dateText} testID="routines-date">{formattedDate}</Text>
         </View>
         
         <View style={styles.filterContainer}>
@@ -105,6 +105,7 @@ export default function RoutinesScreen() {
             onValueChange={setShowCompleted}
             trackColor={{ false: Colors.dark.inactive, true: Colors.dark.primary }}
             thumbColor="#FFFFFF"
+            testID="routines-toggle-completed"
           />
         </View>
         
@@ -192,6 +193,7 @@ export default function RoutinesScreen() {
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
+        testID="add-routine-modal"
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -209,6 +211,7 @@ export default function RoutinesScreen() {
               onChangeText={setNewRoutineTitle}
               placeholder="e.g., Morning Skincare"
               placeholderTextColor={Colors.dark.inactive}
+              testID="add-routine-title"
             />
             
             <Text style={styles.inputLabel}>Description (Optional)</Text>
@@ -275,6 +278,7 @@ export default function RoutinesScreen() {
               ]}
               onPress={handleAddRoutine}
               disabled={!newRoutineTitle.trim() || !selectedCategory}
+              testID="add-routine-save"
             >
               <Text style={styles.saveButtonText}>Add Routine</Text>
             </Pressable>

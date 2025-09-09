@@ -93,10 +93,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <View style={styles.container}>
+        <View style={styles.container} testID="error-boundary-fallback">
           <View style={styles.content}>
-            <Text style={styles.title}>Something went wrong</Text>
-            <Text style={styles.subtitle}>{this.state.error?.message}</Text>
+            <Text style={styles.title} testID="error-title">Something went wrong</Text>
+            <Text style={styles.subtitle} testID="error-message">{this.state.error?.message}</Text>
             {Platform.OS !== 'web' && (
               <Text style={styles.description}>
                 Please check your device logs for more details.

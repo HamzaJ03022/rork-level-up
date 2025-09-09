@@ -11,14 +11,14 @@ interface SafeWrapperProps {
 }
 
 const DefaultFallback = ({ onRetry }: { onRetry?: () => void }) => (
-  <View style={styles.fallbackContainer}>
+  <View style={styles.fallbackContainer} testID="safe-fallback">
     <AlertTriangle size={48} color={Colors.dark.inactive} />
-    <Text style={styles.fallbackTitle}>Something went wrong</Text>
-    <Text style={styles.fallbackText}>
+    <Text style={styles.fallbackTitle} testID="safe-fallback-title">Something went wrong</Text>
+    <Text style={styles.fallbackText} testID="safe-fallback-message">
       We encountered an unexpected error. Please try again.
     </Text>
     {onRetry && (
-      <Pressable style={styles.retryButton} onPress={onRetry}>
+      <Pressable style={styles.retryButton} onPress={onRetry} testID="safe-fallback-retry">
         <RefreshCw size={16} color="#FFFFFF" />
         <Text style={styles.retryText}>Try Again</Text>
       </Pressable>
@@ -37,7 +37,9 @@ const SafeWrapper: React.FC<SafeWrapperProps> = ({
 
   return (
     <ErrorBoundary onError={handleError}>
-      {children}
+      <View style={styles.root} testID="safe-wrapper-root">
+        {children}
+      </View>
     </ErrorBoundary>
   );
 };
@@ -77,6 +79,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 8,
   },
+  root: {
+    flex: 1,
+  }
 });
 
 export default SafeWrapper;

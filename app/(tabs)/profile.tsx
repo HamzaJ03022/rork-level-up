@@ -92,7 +92,7 @@ export default function ProfileScreen() {
     : [];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} testID="profile-scroll">
       <Stack.Screen options={{ title: "Profile" }} />
       
       <View style={styles.header}>
@@ -248,12 +248,12 @@ export default function ProfileScreen() {
       </View>
       
       <View style={styles.actionsContainer}>
-        <Pressable style={styles.actionButton} onPress={navigateToSettings}>
+        <Pressable style={styles.actionButton} onPress={navigateToSettings} testID="profile-settings">
           <Settings size={20} color={Colors.dark.text} />
           <Text style={styles.actionText}>Settings</Text>
         </Pressable>
         
-        <Pressable style={styles.logoutButton} onPress={handleLogout}>
+        <Pressable style={styles.logoutButton} onPress={handleLogout} testID="profile-logout">
           <LogOut size={20} color={Colors.dark.error} />
           <Text style={styles.logoutText}>Log Out</Text>
         </Pressable>

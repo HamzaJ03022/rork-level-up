@@ -172,6 +172,7 @@ export default function CartScreen() {
             <Pressable 
               style={styles.checkoutButton}
               onPress={handleCheckout}
+              testID="cart-checkout"
             >
               <ShoppingBag size={20} color="#FFFFFF" />
               <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>

@@ -47,10 +47,10 @@ export default function CategoryScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} testID="category-scroll">
       <Stack.Screen options={{ title: category.title }} />
       
-      <View style={[styles.header, { backgroundColor: category.color }]}>
+      <View style={[styles.header, { backgroundColor: category.color }]} testID="category-header">
         <HelpCircle size={32} color="#FFFFFF" />
         <Text style={styles.headerTitle}>{category.title}</Text>
         <Text style={styles.headerDescription}>{category.description}</Text>
@@ -60,6 +60,7 @@ export default function CategoryScreen() {
         <Pressable 
           style={styles.addAllButton}
           onPress={handleAddAllToRoutine}
+          testID="category-add-all"
         >
           <Plus size={18} color="#FFFFFF" />
           <Text style={styles.addAllButtonText}>Add All to Routines</Text>

@@ -230,14 +230,14 @@ export default function TipDetailScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} testID="tip-scroll">
       <Stack.Screen options={{ title: tip.title }} />
       
       <View style={styles.header}>
         <Text style={styles.category} numberOfLines={1}>
           {category.title}
         </Text>
-        <Text style={styles.title}>{tip.title}</Text>
+        <Text style={styles.title} testID="tip-title">{tip.title}</Text>
         
         <View style={styles.metaContainer}>
           <View style={styles.metaItem}>
@@ -261,7 +261,7 @@ export default function TipDetailScreen() {
       
       <View style={styles.descriptionContainer}>
         <Text style={styles.descriptionTitle}>How to do it</Text>
-        <Text style={styles.description}>{tip.description}</Text>
+        <Text style={styles.description} testID="tip-description">{tip.description}</Text>
       </View>
       
       {/* Haircut Analysis Section - Only show for the haircut tip */}
@@ -634,6 +634,7 @@ export default function TipDetailScreen() {
         <Pressable 
           style={styles.addToRoutineButton}
           onPress={handleAddToRoutine}
+          testID="tip-add-to-routine"
         >
           <Plus size={20} color="#FFFFFF" />
           <Text style={styles.addToRoutineText}>Add to Routine</Text>
@@ -646,6 +647,7 @@ export default function TipDetailScreen() {
           ]}
           onPress={handleMarkComplete}
           disabled={isCompleted}
+          testID="tip-mark-completed"
         >
           {isCompleted ? (
             <>

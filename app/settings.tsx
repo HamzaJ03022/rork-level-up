@@ -101,7 +101,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="settings-screen">
       <Stack.Screen 
         options={{ 
           title: "Settings",
@@ -111,7 +111,7 @@ export default function SettingsScreen() {
             </Pressable>
           ),
           headerRight: () => (
-            <Pressable onPress={handleSave} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+            <Pressable onPress={handleSave} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })} testID="settings-save-header">
               <Save size={24} color={Colors.dark.primary} />
             </Pressable>
           ),
@@ -128,6 +128,7 @@ export default function SettingsScreen() {
           onChangeText={setName}
           placeholder="Enter your name"
           placeholderTextColor={Colors.dark.inactive}
+          testID="settings-name"
         />
         
         <Text style={styles.label}>Age</Text>
@@ -275,6 +276,7 @@ export default function SettingsScreen() {
             <Pressable 
               style={styles.changePhotoButton}
               onPress={handlePickFacePhoto}
+              testID="settings-face-photo"
             >
               <Text style={styles.changePhotoText}>
                 {facePhoto ? 'Change Photo' : 'Upload Photo'}
@@ -313,6 +315,7 @@ export default function SettingsScreen() {
             <Pressable 
               style={styles.changePhotoButton}
               onPress={handlePickBodyPhoto}
+              testID="settings-body-photo"
             >
               <Text style={styles.changePhotoText}>
                 {bodyPhoto ? 'Change Photo' : 'Upload Photo'}
@@ -361,6 +364,7 @@ export default function SettingsScreen() {
           <Pressable 
             style={styles.saveButton}
             onPress={handleSave}
+            testID="settings-save"
           >
             <Text style={styles.saveButtonText}>Save Changes</Text>
           </Pressable>
