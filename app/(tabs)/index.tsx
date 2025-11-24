@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
@@ -14,6 +14,13 @@ import { CheckCircle2, ArrowRight } from 'lucide-react-native';
 export default function HomeScreen() {
   const router = useRouter();
   const profile = useUserStore(state => state.profile);
+  const isOnboarded = useUserStore(state => state.isOnboarded);
+  
+  useEffect(() => {
+    if (!isOnboarded) {
+      router.replace('/welcome');
+    }
+  }, [isOnboarded, router]);
   
   // Get today's date
   const today = new Date();
