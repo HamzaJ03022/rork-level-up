@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Tabs } from "expo-router";
 import { useRouter } from "expo-router";
 import Colors from "@/constants/colors";
-import { Home, ListChecks, Camera, User, ShoppingBag } from "lucide-react-native";
+import { Home, ListChecks, Camera, User } from "lucide-react-native";
 import { useUserStore } from "@/store/user-store";
 
 export default function TabLayout() {
@@ -52,13 +52,6 @@ export default function TabLayout() {
         options={{
           title: "Progress",
           tabBarIcon: ({ color }) => <Camera size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="shop"
-        options={{
-          title: "Shop",
-          tabBarIcon: ({ color }) => <ShoppingBag size={24} color={color} />,
         }}
       />
       <Tabs.Screen
