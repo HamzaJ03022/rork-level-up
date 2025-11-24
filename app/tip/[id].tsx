@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, Modal, ActivityIndicator, Image, Platform } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import Colors from '@/constants/colors';
 import { tips } from '@/constants/tips';
 import { categories } from '@/constants/categories';
@@ -8,11 +8,10 @@ import { Star, Clock, BarChart, Check, Plus, X, Camera, Brain, ArrowRight, Refre
 import { useUserStore } from '@/store/user-store';
 import { Routine, HaircutSuggestion, BeardStyleSuggestion, HaircutAnalysis, BeardAnalysis } from '@/types';
 import * as ImagePicker from 'expo-image-picker';
-import { trpc, trpcClient } from '@/lib/trpc';
+import { trpcClient } from '@/lib/trpc';
 
 export default function TipDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const profile = useUserStore(state => state.profile);
   const markTipCompleted = useUserStore(state => state.markTipCompleted);
   const addRoutine = useUserStore(state => state.addRoutine);
@@ -111,11 +110,9 @@ export default function TipDetailScreen() {
     setHaircutPhotoError(null);
 
     try {
-      console.log('[Haircut] Sending analyze request');
       const result = await trpcClient.haircut.analyze.mutate({
         photoUri: haircutPhoto,
       });
-      console.log('[Haircut] Result', result);
 
       const normalized: HaircutAnalysis = {
         photoUri: haircutPhoto,
@@ -172,11 +169,9 @@ export default function TipDetailScreen() {
     setBeardPhotoError(null);
 
     try {
-      console.log('[Beard] Sending analyze request');
       const result = await trpcClient.beard.analyze.mutate({
         photoUri: beardPhoto,
       });
-      console.log('[Beard] Result', result);
 
       const normalized: BeardAnalysis = {
         photoUri: beardPhoto,
@@ -767,7 +762,7 @@ export default function TipDetailScreen() {
                 <View style={styles.haircutDetailSection}>
                   <Text style={styles.haircutDetailTitle}>How to Ask Your Barber</Text>
                   <Text style={styles.haircutDetailText}>
-                    Show them this picture and ask for a {selectedHaircut.name.toLowerCase()}. Mention that you have a {haircutResults?.faceShape} face shape and {haircutResults?.hairType} hair. Discuss how much time you're willing to spend styling it daily.
+                    Show them this picture and ask for a {selectedHaircut.name.toLowerCase()}. Mention that you have a {haircutResults?.faceShape} face shape and {haircutResults?.hairType} hair. Discuss how much time you&apos;re willing to spend styling it daily.
                   </Text>
                 </View>
                 
