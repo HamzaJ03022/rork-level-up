@@ -5,7 +5,6 @@ import {
   View, 
   TextInput, 
   Pressable, 
-  ScrollView, 
   Platform, 
   Image, 
   ActivityIndicator,
@@ -15,8 +14,8 @@ import {
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
-import { ChevronRight, X, Camera, Upload, Check, Brain, ArrowRight, ChevronLeft } from 'lucide-react-native';
-import { UserProfile, AppearanceGoal } from '@/types';
+import { ChevronRight, Camera, Check, Brain, ArrowRight, ChevronLeft } from 'lucide-react-native';
+import { UserProfile } from '@/types';
 import * as ImagePicker from 'expo-image-picker';
 import { appearanceGoals } from '@/constants/appearance-goals';
 import { motivationalGoals } from '@/constants/motivational-goals';
@@ -55,7 +54,7 @@ export default function OnboardingScreen() {
   
   // AI Analysis
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [, setAnalysisComplete] = useState(false);
   const [analysisResults, setAnalysisResults] = useState<any>(null);
   
   // Error states
@@ -73,7 +72,7 @@ export default function OnboardingScreen() {
       duration: 300,
       useNativeDriver: false
     }).start();
-  }, [step]);
+  }, [step, progressAnim]);
 
   const animateTransition = (nextStep: number) => {
     // Fade out
@@ -210,7 +209,7 @@ export default function OnboardingScreen() {
       const hasHydration = currentRoutines.some(r => r.includes('hydration'));
       const hasProtein = currentRoutines.some(r => r.includes('protein'));
       const hasStyle = currentRoutines.some(r => r.includes('style'));
-      const hasDental = currentRoutines.some(r => r.includes('dental'));
+
       
       // Generate personalized analysis based on current routines
       const mockAnalysis = {
@@ -813,7 +812,7 @@ export default function OnboardingScreen() {
                   </View>
                   <Text style={styles.analysisTitle}>Your AI Analysis</Text>
                   <Text style={styles.analysisSubtitle}>
-                    Based on your photos and current routines, here's our personalized analysis
+                    Based on your photos and current routines, here&apos;s our personalized analysis
                   </Text>
                 </View>
                 
@@ -914,7 +913,7 @@ export default function OnboardingScreen() {
         return (
           <View style={styles.goalsContainer}>
             <Text style={styles.goalsInstructions}>
-              Now, select the improvement routines you want to focus on. We'll create daily routines for you.
+              Now, select the improvement routines you want to focus on. We&apos;ll create daily routines for you.
             </Text>
             
             {appearanceGoals.map((goal) => {

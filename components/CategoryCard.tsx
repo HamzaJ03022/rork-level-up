@@ -12,15 +12,8 @@ type CategoryCardProps = {
 const CategoryCard = ({ category }: CategoryCardProps) => {
   const router = useRouter();
   
-  // Import the icon dynamically
   const getIconComponent = () => {
-    try {
-      // This is a workaround since we can't dynamically import icons
-      // In a real app, you would use a proper icon mapping
-      return <HelpCircle color="#FFFFFF" size={24} />;
-    } catch (error) {
-      return <HelpCircle color="#FFFFFF" size={24} />;
-    }
+    return <HelpCircle color="#FFFFFF" size={24} />;
   };
 
   const handlePress = () => {

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, ScrollView, Pressable, ActivityIndicator, Platf
 import { Stack, useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
-import { Brain, RefreshCw, ArrowLeft, Camera, Upload } from 'lucide-react-native';
+import { Brain, RefreshCw, ArrowLeft, Camera } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { AIAnalysisResult } from '@/types';
 
@@ -86,8 +86,7 @@ export default function AIAdviceScreen() {
       const hasPosture = currentRoutines.some(r => r.includes('posture'));
       const hasHydration = currentRoutines.some(r => r.includes('hydration'));
       const hasProtein = currentRoutines.some(r => r.includes('protein'));
-      const hasStyle = currentRoutines.some(r => r.includes('style'));
-      const hasDental = currentRoutines.some(r => r.includes('dental'));
+
       
       // Generate personalized analysis based on current routines
       const mockAnalysis: AIAnalysisResult = {

@@ -25,7 +25,6 @@ export default function ProfileScreen() {
     : 0;
   
   const completedTipsCount = profile?.completedTips?.length || 0;
-  const selectedGoalsCount = profile?.selectedImprovementRoutines?.length || 0;
   const currentRoutinesCount = profile?.currentRoutines?.length || 0;
   
   const formatHeight = () => {
