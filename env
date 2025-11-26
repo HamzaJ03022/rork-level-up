@@ -1,0 +1,8 @@
+# Environment Variables
+
+# OpenAI API Configuration
+# Get your API key from: https://platform.openai.com/api-keys
+OPENAI_API_KEY=
+
+# IMPORTANT: Never commit this file with real API keys to version control
+# This file should be listed in .gitignore
