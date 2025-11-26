@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import Colors from '@/constants/colors';
 import { Brain, ChevronRight } from 'lucide-react-native';
@@ -9,17 +9,19 @@ const AIAdviceCard = () => {
   const router = useRouter();
   const aiAnalysis = useUserStore(state => state.aiAnalysis);
   
-  const hasAnalysis = !!aiAnalysis.lastAnalysis;
-  const lastAnalysisDate = hasAnalysis && aiAnalysis.lastAnalysis
-    ? new Date(aiAnalysis.lastAnalysis).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      })
-    : null;
+  const hasAnalysis = useMemo(() => !!aiAnalysis.lastAnalysis, [aiAnalysis.lastAnalysis]);
+  
+  const lastAnalysisDate = useMemo(() => {
+    if (!hasAnalysis || !aiAnalysis.lastAnalysis) return null;
+    return new Date(aiAnalysis.lastAnalysis).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  }, [hasAnalysis, aiAnalysis.lastAnalysis]);
 
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     router.push('/ai-advice');
-  };
+  }, [router]);
 
   return (
     <Pressable 
@@ -87,4 +89,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AIAdviceCard;
+export default memo(AIAdviceCard);

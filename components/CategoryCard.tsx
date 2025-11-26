@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Category } from '@/constants/categories';
@@ -79,4 +79,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CategoryCard;
+export default memo(CategoryCard);

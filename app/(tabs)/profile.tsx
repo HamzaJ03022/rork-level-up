@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, Alert, Platform, Image } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
@@ -13,40 +13,61 @@ export default function ProfileScreen() {
   const profile = useUserStore(state => state.profile);
   const setOnboarded = useUserStore(state => state.setOnboarded);
   
-  const startDate = profile?.startDate 
-    ? new Date(profile.startDate).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : 'Unknown';
+  const startDate = useMemo(() => 
+    profile?.startDate 
+      ? new Date(profile.startDate).toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        })
+      : 'Unknown',
+    [profile?.startDate]
+  );
   
-  const daysActive = profile?.startDate 
-    ? Math.floor((new Date().getTime() - new Date(profile.startDate).getTime()) / (1000 * 60 * 60 * 24))
-    : 0;
+  const daysActive = useMemo(() => 
+    profile?.startDate 
+      ? Math.floor((new Date().getTime() - new Date(profile.startDate).getTime()) / (1000 * 60 * 60 * 24))
+      : 0,
+    [profile?.startDate]
+  );
   
-  const completedTipsCount = profile?.completedTips.length || 0;
-  const selectedRoutinesCount = profile?.selectedImprovementRoutines?.length || 0;
+  const completedTipsCount = useMemo(() => 
+    profile?.completedTips?.length || 0,
+    [profile?.completedTips]
+  );
   
-  const formatHeight = () => {
+  const selectedRoutinesCount = useMemo(() => 
+    profile?.selectedImprovementRoutines?.length || 0,
+    [profile?.selectedImprovementRoutines]
+  );
+  
+  const formatHeight = useMemo(() => {
     if (!profile?.height) return 'Not specified';
     
     if (profile.height.unit === 'cm') {
       return `${profile.height.value} cm`;
     } else {
-      // Convert decimal feet to feet and inches
       const feet = Math.floor(profile.height.value);
       const inches = Math.round((profile.height.value - feet) * 12);
       return `${feet}'${inches}"`;
     }
-  };
+  }, [profile?.height]);
   
-  const formatWeight = () => {
+  const formatWeight = useMemo(() => {
     if (!profile?.weight) return 'Not specified';
     return `${profile.weight.value} ${profile.weight.unit}`;
-  };
+  }, [profile?.weight]);
   
-  const handleLogout = () => {
+  const resetApp = useCallback(async () => {
+    try {
+      await AsyncStorage.clear();
+      setOnboarded(false);
+    } catch (error) {
+      console.error('Error clearing storage:', error);
+    }
+  }, [setOnboarded]);
+
+  const handleLogout = useCallback(() => {
     if (Platform.OS === 'web') {
       const confirmed = window.confirm('Are you sure you want to log out? This will reset all your data.');
       if (confirmed) {
@@ -62,34 +83,29 @@ export default function ProfileScreen() {
         ]
       );
     }
-  };
+  }, [resetApp]);
 
-  const resetApp = async () => {
-    try {
-      await AsyncStorage.clear();
-      setOnboarded(false);
-    } catch (error) {
-      console.error('Error clearing storage:', error);
-    }
-  };
-
-  const navigateToSettings = () => {
+  const navigateToSettings = useCallback(() => {
     router.push('/settings');
-  };
+  }, [router]);
 
-  // Get selected motivational goals
-  const selectedMotivationalGoalDetails = profile?.selectedMotivationalGoals
-    ? profile.selectedMotivationalGoals.map(goalId => 
-        motivationalGoals.find(goal => goal.id === goalId)
-      ).filter(Boolean)
-    : [];
+  const selectedMotivationalGoalDetails = useMemo(() => 
+    profile?.selectedMotivationalGoals
+      ? profile.selectedMotivationalGoals.map(goalId => 
+          motivationalGoals.find(goal => goal.id === goalId)
+        ).filter(Boolean)
+      : [],
+    [profile?.selectedMotivationalGoals]
+  );
 
-  // Get selected improvement routines
-  const selectedRoutineDetails = profile?.selectedImprovementRoutines
-    ? profile.selectedImprovementRoutines.map(routineId => 
-        appearanceGoals.find(goal => goal.id === routineId)
-      ).filter(Boolean)
-    : [];
+  const selectedRoutineDetails = useMemo(() => 
+    profile?.selectedImprovementRoutines
+      ? profile.selectedImprovementRoutines.map(routineId => 
+          appearanceGoals.find(goal => goal.id === routineId)
+        ).filter(Boolean)
+      : [],
+    [profile?.selectedImprovementRoutines]
+  );
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} testID="profile-scroll">
@@ -160,7 +176,7 @@ export default function ProfileScreen() {
             <Ruler size={20} color={Colors.dark.primary} />
             <View style={styles.measurementContent}>
               <Text style={styles.measurementLabel}>Height</Text>
-              <Text style={styles.measurementValue}>{formatHeight()}</Text>
+              <Text style={styles.measurementValue}>{formatHeight}</Text>
             </View>
           </View>
           
@@ -170,7 +186,7 @@ export default function ProfileScreen() {
             <Weight size={20} color={Colors.dark.primary} />
             <View style={styles.measurementContent}>
               <Text style={styles.measurementLabel}>Weight</Text>
-              <Text style={styles.measurementValue}>{formatWeight()}</Text>
+              <Text style={styles.measurementValue}>{formatWeight}</Text>
             </View>
           </View>
         </View>

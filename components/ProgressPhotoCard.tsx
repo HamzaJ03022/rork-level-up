@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { StyleSheet, View, Text, Pressable, Image } from 'react-native';
 import { ProgressPhoto } from '@/types';
 import Colors from '@/constants/colors';
@@ -19,9 +19,9 @@ const ProgressPhotoCard = ({ photo, onPress }: ProgressPhotoCardProps) => {
     year: 'numeric',
   }) : 'Unknown date';
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     removeProgressPhoto(photo.id);
-  };
+  }, [removeProgressPhoto, photo.id]);
 
   return (
     <Pressable 
@@ -120,4 +120,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProgressPhotoCard;
+export default memo(ProgressPhotoCard);

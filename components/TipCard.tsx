@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Tip } from '@/constants/tips';
@@ -23,30 +23,28 @@ const TipCard = ({ tip }: TipCardProps) => {
     router.push(`/tip/${tip.id}`);
   };
 
-  const handleMarkComplete = () => {
+  const handleMarkComplete = useCallback(() => {
     if (!isCompleted) {
       markTipCompleted(tip.id);
     }
-  };
+  }, [isCompleted, markTipCompleted, tip.id]);
 
-  const handleAddToRoutine = (e: any) => {
+  const handleAddToRoutine = useCallback((e: any) => {
     e.stopPropagation();
     
-    // Add this tip as a daily routine
     const newRoutine: Routine = {
       id: `routine-${Date.now()}`,
       title: tip.title,
       description: tip.description,
       categoryId: tip.categoryId,
-      frequency: 'daily', // Default to daily
+      frequency: 'daily',
       completed: false,
     };
     
     addRoutine(newRoutine);
-  };
+  }, [addRoutine, tip.title, tip.description, tip.categoryId]);
 
-  // Render impact stars
-  const renderImpact = () => {
+  const renderImpact = useMemo(() => {
     const stars = [];
     for (let i = 0; i < 5; i++) {
       stars.push(
@@ -59,7 +57,7 @@ const TipCard = ({ tip }: TipCardProps) => {
       );
     }
     return stars;
-  };
+  }, [tip.impact]);
 
   return (
     <Pressable 
@@ -104,7 +102,7 @@ const TipCard = ({ tip }: TipCardProps) => {
         <View style={styles.impactContainer}>
           <Text style={styles.label}>Impact:</Text>
           <View style={styles.starsContainer}>
-            {renderImpact()}
+            {renderImpact}
           </View>
         </View>
         
@@ -227,4 +225,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TipCard;
+export default memo(TipCard);

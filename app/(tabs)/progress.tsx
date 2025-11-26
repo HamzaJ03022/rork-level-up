@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, TextInput, Modal, Platform } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
@@ -18,7 +18,7 @@ export default function ProgressScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   
-  const handleAddPhoto = async () => {
+  const handleAddPhoto = useCallback(async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -33,11 +33,15 @@ export default function ProgressScreen() {
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      // Show user-friendly error message
     }
-  };
+  }, []);
 
-  const handleSavePhoto = () => {
+  const resetForm = useCallback(() => {
+    setSelectedImage(null);
+    setNotes('');
+  }, []);
+
+  const handleSavePhoto = useCallback(() => {
     if (selectedImage) {
       const newPhoto: ProgressPhoto = {
         id: Date.now().toString(),
@@ -50,19 +54,14 @@ export default function ProgressScreen() {
       setModalVisible(false);
       resetForm();
     }
-  };
+  }, [selectedImage, notes, addProgressPhoto, resetForm]);
 
-  const resetForm = () => {
-    setSelectedImage(null);
-    setNotes('');
-  };
-
-  const handlePhotoPress = (photo: ProgressPhoto) => {
+  const handlePhotoPress = useCallback((photo: ProgressPhoto) => {
     router.push({
       pathname: '/photo-detail',
       params: { id: photo.id }
     });
-  };
+  }, [router]);
 
   return (
     <SafeWrapper>

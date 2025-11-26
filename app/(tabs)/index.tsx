@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
@@ -22,35 +22,39 @@ export default function HomeScreen() {
     }
   }, [isOnboarded, router]);
   
-  // Get today's date
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+  const formattedDate = useMemo(() => {
+    const today = new Date();
+    return today.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, []);
   
-  // Get 3 random tips that haven't been completed yet
-  const getRecommendedTips = () => {
-    if (!profile || !profile.completedTips) return [];
+  const recommendedTips = useMemo(() => {
+    if (!profile?.completedTips) return [];
     
     const uncompletedTips = tips.filter(tip => !profile.completedTips.includes(tip.id));
     const shuffled = [...uncompletedTips].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 2);
-  };
+  }, [profile?.completedTips]);
 
-  // Get daily routines
-  const getDailyRoutines = () => {
-    if (!profile || !profile.routines) return [];
+  const dailyRoutines = useMemo(() => {
+    if (!profile?.routines) return [];
     return profile.routines.filter(routine => 
       routine.frequency === 'daily' && !routine.completed
     ).slice(0, 3);
-  };
+  }, [profile?.routines]);
 
-  const recommendedTips = getRecommendedTips();
-  const dailyRoutines = getDailyRoutines();
-  const completedRoutinesCount = profile?.routines?.filter(r => r.completed)?.length || 0;
-  const totalRoutinesCount = profile?.routines?.length || 0;
+  const completedRoutinesCount = useMemo(() => 
+    profile?.routines?.filter(r => r.completed)?.length || 0,
+    [profile?.routines]
+  );
+  
+  const totalRoutinesCount = useMemo(() => 
+    profile?.routines?.length || 0,
+    [profile?.routines]
+  );
 
   return (
     <SafeWrapper>

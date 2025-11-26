@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { StyleSheet, Text, View, ScrollView, TextInput, Pressable, Modal, Switch } from 'react-native';
 import { Stack } from 'expo-router';
 import Colors from '@/constants/colors';
@@ -25,7 +25,14 @@ export default function RoutinesScreen() {
   
   const frequencies: ('daily' | 'weekly' | 'monthly')[] = ['daily', 'weekly', 'monthly'];
 
-  const handleAddRoutine = () => {
+  const resetForm = useCallback(() => {
+    setNewRoutineTitle('');
+    setNewRoutineDescription('');
+    setSelectedCategory('');
+    setSelectedFrequency('daily');
+  }, []);
+
+  const handleAddRoutine = useCallback(() => {
     if (newRoutineTitle.trim() && selectedCategory && selectedFrequency) {
       const newRoutine: Routine = {
         id: Date.now().toString(),
@@ -40,40 +47,38 @@ export default function RoutinesScreen() {
       setModalVisible(false);
       resetForm();
     }
-  };
+  }, [newRoutineTitle, newRoutineDescription, selectedCategory, selectedFrequency, addRoutine, resetForm]);
 
-  const resetForm = () => {
-    setNewRoutineTitle('');
-    setNewRoutineDescription('');
-    setSelectedCategory('');
-    setSelectedFrequency('daily');
-  };
-
-  const handleToggleRoutine = (id: string, completed: boolean) => {
+  const handleToggleRoutine = useCallback((id: string, completed: boolean) => {
     toggleRoutineCompletion(id, completed);
-  };
+  }, [toggleRoutineCompletion]);
 
-  // Filter routines based on showCompleted state
-  const filteredRoutines = profile?.routines?.filter(routine => 
-    showCompleted ? true : !routine.completed
-  ) || [];
+  const filteredRoutines = useMemo(() => 
+    profile?.routines?.filter(routine => 
+      showCompleted ? true : !routine.completed
+    ) || [],
+    [profile?.routines, showCompleted]
+  );
 
-  // Group routines by frequency
-  const groupedRoutines = filteredRoutines.reduce((acc, routine) => {
-    if (!acc[routine.frequency]) {
-      acc[routine.frequency] = [];
-    }
-    acc[routine.frequency].push(routine);
-    return acc;
-  }, {} as Record<string, Routine[]>);
+  const groupedRoutines = useMemo(() => 
+    filteredRoutines.reduce((acc, routine) => {
+      if (!acc[routine.frequency]) {
+        acc[routine.frequency] = [];
+      }
+      acc[routine.frequency].push(routine);
+      return acc;
+    }, {} as Record<string, Routine[]>),
+    [filteredRoutines]
+  );
 
-  // Get today's date for the header
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+  const formattedDate = useMemo(() => {
+    const today = new Date();
+    return today.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, []);
 
   return (
     <SafeWrapper>

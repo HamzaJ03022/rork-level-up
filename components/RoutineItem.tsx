@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { Routine } from '@/types';
 import Colors from '@/constants/colors';
@@ -20,13 +20,13 @@ const RoutineItem = ({ routine, onToggle }: RoutineItemProps) => {
       })
     : 'Never';
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     onToggle(routine.id, !routine.completed);
-  };
+  }, [onToggle, routine.id, routine.completed]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     removeRoutine(routine.id);
-  };
+  }, [removeRoutine, routine.id]);
 
   return (
     <View style={[
@@ -161,4 +161,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RoutineItem;
+export default memo(RoutineItem);

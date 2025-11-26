@@ -1,11 +1,10 @@
-import React, { useEffect } from "react";
-import { Tabs } from "expo-router";
-import { useRouter } from "expo-router";
+import React, { useEffect, memo } from "react";
+import { Tabs, useRouter } from "expo-router";
 import Colors from "@/constants/colors";
 import { Home, ListChecks, Camera, User } from "lucide-react-native";
 import { useUserStore } from "@/store/user-store";
 
-export default function TabLayout() {
+const TabLayout = memo(function TabLayout() {
   const router = useRouter();
   const isOnboarded = useUserStore(state => state.isOnboarded);
   
@@ -13,7 +12,7 @@ export default function TabLayout() {
     if (!isOnboarded) {
       router.replace('/onboarding');
     }
-  }, [isOnboarded]);
+  }, [isOnboarded, router]);
 
   return (
     <Tabs
@@ -63,4 +62,6 @@ export default function TabLayout() {
       />
     </Tabs>
   );
-}
+});
+
+export default TabLayout;
