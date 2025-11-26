@@ -8,6 +8,8 @@
     "start-web-dev": "DEBUG=expo* expo start --web --tunnel"
   },
   "dependencies": {
+    "@clerk/backend": "^2.24.0",
+    "@clerk/clerk-expo": "^2.19.6",
     "@expo/vector-icons": "^15.0.3",
     "@hono/trpc-server": "^0.3.4",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -28,6 +30,7 @@
     "expo-linking": "~8.0.9",
     "expo-location": "~19.0.7",
     "expo-router": "~6.0.15",
+    "expo-secure-store": "~15.0.7",
     "expo-splash-screen": "~31.0.11",
     "expo-status-bar": "~3.0.8",
     "expo-symbols": "~1.0.7",

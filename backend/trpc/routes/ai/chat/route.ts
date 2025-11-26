@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { publicProcedure } from "@/backend/trpc/create-context";
+import { protectedProcedure } from "@/backend/trpc/create-context";
 import { generateChatCompletion } from "@/backend/services/openai";
 
-export default publicProcedure
+export default protectedProcedure
   .input(z.object({ 
     messages: z.array(z.object({
       role: z.enum(['system', 'user', 'assistant']),

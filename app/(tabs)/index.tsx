@@ -10,19 +10,23 @@ import AIAdviceCard from '@/components/AIAdviceCard';
 import SafeWrapper from '@/components/SafeWrapper';
 import { useUserStore } from '@/store/user-store';
 import { CheckCircle2, ArrowRight } from 'lucide-react-native';
+import { useAuth } from '@clerk/clerk-expo';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
   const profile = useUserStore(state => state.profile);
   const isOnboarded = useUserStore(state => state.isOnboarded);
   const completedTips = useUserStore(state => state.profile?.completedTips);
   const routines = useUserStore(state => state.profile?.routines);
   
   useEffect(() => {
-    if (!isOnboarded) {
+    if (isLoaded && !isSignedIn) {
+      router.replace('/sign-in');
+    } else if (isLoaded && isSignedIn && !isOnboarded) {
       router.replace('/welcome');
     }
-  }, [isOnboarded, router]);
+  }, [isLoaded, isSignedIn, isOnboarded, router]);
   
   const formattedDate = useMemo(() => {
     const today = new Date();

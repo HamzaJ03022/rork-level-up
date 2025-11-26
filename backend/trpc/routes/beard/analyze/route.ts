@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { publicProcedure } from "@/backend/trpc/create-context";
+import { protectedProcedure } from "@/backend/trpc/create-context";
 
 // This procedure analyzes a beard photo and suggests suitable beard styles
-export default publicProcedure
+export default protectedProcedure
   .input(z.object({ 
     photoUri: z.string(),
     faceShape: z.string().optional(),

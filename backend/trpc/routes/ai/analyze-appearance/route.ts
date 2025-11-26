@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { publicProcedure } from "@/backend/trpc/create-context";
+import { protectedProcedure } from "@/backend/trpc/create-context";
 import { analyzeImageWithVision, generateChatCompletion } from "@/backend/services/openai";
 
-export default publicProcedure
+export default protectedProcedure
   .input(z.object({ 
     facePhotoBase64: z.string().optional(),
     bodyPhotoBase64: z.string().optional(),
