@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
@@ -15,6 +15,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const profile = useUserStore(state => state.profile);
   const isOnboarded = useUserStore(state => state.isOnboarded);
+  const completedTips = useUserStore(state => state.profile?.completedTips);
+  const routines = useUserStore(state => state.profile?.routines);
   
   useEffect(() => {
     if (!isOnboarded) {
@@ -32,29 +34,33 @@ export default function HomeScreen() {
   }, []);
   
   const recommendedTips = useMemo(() => {
-    if (!profile?.completedTips) return [];
+    if (!completedTips) return [];
     
-    const uncompletedTips = tips.filter(tip => !profile.completedTips.includes(tip.id));
+    const uncompletedTips = tips.filter(tip => !completedTips.includes(tip.id));
     const shuffled = [...uncompletedTips].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 2);
-  }, [profile?.completedTips]);
+  }, [completedTips]);
 
   const dailyRoutines = useMemo(() => {
-    if (!profile?.routines) return [];
-    return profile.routines.filter(routine => 
+    if (!routines) return [];
+    return routines.filter(routine => 
       routine.frequency === 'daily' && !routine.completed
     ).slice(0, 3);
-  }, [profile?.routines]);
+  }, [routines]);
 
   const completedRoutinesCount = useMemo(() => 
-    profile?.routines?.filter(r => r.completed)?.length || 0,
-    [profile?.routines]
+    routines?.filter(r => r.completed)?.length || 0,
+    [routines]
   );
   
   const totalRoutinesCount = useMemo(() => 
-    profile?.routines?.length || 0,
-    [profile?.routines]
+    routines?.length || 0,
+    [routines]
   );
+
+  const handleViewAllRoutines = useCallback(() => {
+    router.push('/routines');
+  }, [router]);
 
   return (
     <SafeWrapper>
@@ -97,7 +103,7 @@ export default function HomeScreen() {
             <Pressable 
               style={styles.viewAllButton}
               testID="home-view-all-routines"
-              onPress={() => router.push('/routines')}
+              onPress={handleViewAllRoutines}
             >
               <Text style={styles.viewAllText}>View All Routines</Text>
               <ArrowRight size={16} color={Colors.dark.primary} />
@@ -111,7 +117,7 @@ export default function HomeScreen() {
             <Pressable 
               style={styles.addRoutinesButton}
               testID="home-go-to-routines"
-              onPress={() => router.push('/routines')}
+              onPress={handleViewAllRoutines}
             >
               <Text style={styles.addRoutinesText}>Go to Routines</Text>
             </Pressable>

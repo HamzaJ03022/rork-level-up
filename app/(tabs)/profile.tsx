@@ -12,6 +12,9 @@ export default function ProfileScreen() {
   const router = useRouter();
   const profile = useUserStore(state => state.profile);
   const setOnboarded = useUserStore(state => state.setOnboarded);
+  const completedTips = useUserStore(state => state.profile?.completedTips);
+  const selectedImprovementRoutines = useUserStore(state => state.profile?.selectedImprovementRoutines);
+  const selectedMotivationalGoals = useUserStore(state => state.profile?.selectedMotivationalGoals);
   
   const startDate = useMemo(() => 
     profile?.startDate 
@@ -32,13 +35,13 @@ export default function ProfileScreen() {
   );
   
   const completedTipsCount = useMemo(() => 
-    profile?.completedTips?.length || 0,
-    [profile?.completedTips]
+    completedTips?.length || 0,
+    [completedTips]
   );
   
   const selectedRoutinesCount = useMemo(() => 
-    profile?.selectedImprovementRoutines?.length || 0,
-    [profile?.selectedImprovementRoutines]
+    selectedImprovementRoutines?.length || 0,
+    [selectedImprovementRoutines]
   );
   
   const formatHeight = useMemo(() => {
@@ -90,21 +93,21 @@ export default function ProfileScreen() {
   }, [router]);
 
   const selectedMotivationalGoalDetails = useMemo(() => 
-    profile?.selectedMotivationalGoals
-      ? profile.selectedMotivationalGoals.map(goalId => 
+    selectedMotivationalGoals
+      ? selectedMotivationalGoals.map(goalId => 
           motivationalGoals.find(goal => goal.id === goalId)
         ).filter(Boolean)
       : [],
-    [profile?.selectedMotivationalGoals]
+    [selectedMotivationalGoals]
   );
 
   const selectedRoutineDetails = useMemo(() => 
-    profile?.selectedImprovementRoutines
-      ? profile.selectedImprovementRoutines.map(routineId => 
+    selectedImprovementRoutines
+      ? selectedImprovementRoutines.map(routineId => 
           appearanceGoals.find(goal => goal.id === routineId)
         ).filter(Boolean)
       : [],
-    [profile?.selectedImprovementRoutines]
+    [selectedImprovementRoutines]
   );
 
   return (

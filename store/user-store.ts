@@ -109,6 +109,11 @@ export const useUserStore = create<UserState>()(
     {
       name: 'level-up-user-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        profile: state.profile,
+        isOnboarded: state.isOnboarded,
+        aiAnalysis: state.aiAnalysis,
+      }),
     }
   )
 );

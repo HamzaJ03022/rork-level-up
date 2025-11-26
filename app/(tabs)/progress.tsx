@@ -11,7 +11,7 @@ import { ProgressPhoto } from '@/types';
 
 export default function ProgressScreen() {
   const router = useRouter();
-  const profile = useUserStore(state => state.profile);
+  const progressPhotos = useUserStore(state => state.profile?.progressPhotos);
   const addProgressPhoto = useUserStore(state => state.addProgressPhoto);
   
   const [modalVisible, setModalVisible] = useState(false);
@@ -39,6 +39,10 @@ export default function ProgressScreen() {
   const resetForm = useCallback(() => {
     setSelectedImage(null);
     setNotes('');
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setModalVisible(false);
   }, []);
 
   const handleSavePhoto = useCallback(() => {
@@ -81,9 +85,9 @@ export default function ProgressScreen() {
       />
       
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content} testID="progress-scroll">
-        {profile?.progressPhotos && Array.isArray(profile.progressPhotos) && profile.progressPhotos.length > 0 ? (
+        {progressPhotos && Array.isArray(progressPhotos) && progressPhotos.length > 0 ? (
           <View style={styles.photoGrid}>
-            {profile.progressPhotos.map(photo => (
+            {progressPhotos.map(photo => (
               <ProgressPhotoCard 
                 key={photo.id} 
                 photo={photo} 
@@ -114,14 +118,14 @@ export default function ProgressScreen() {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={handleCloseModal}
         testID="progress-add-photo-modal"
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle} testID="progress-modal-title">Add Progress Photo</Text>
-              <Pressable onPress={() => setModalVisible(false)}>
+              <Pressable onPress={handleCloseModal}>
                 <X size={24} color={Colors.dark.text} />
               </Pressable>
             </View>

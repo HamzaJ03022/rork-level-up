@@ -11,7 +11,8 @@ import { Routine } from '@/types';
 import { appearanceGoals } from '@/constants/appearance-goals';
 
 export default function RoutinesScreen() {
-  const profile = useUserStore(state => state.profile);
+  const routines = useUserStore(state => state.profile?.routines);
+  const selectedImprovementRoutines = useUserStore(state => state.profile?.selectedImprovementRoutines);
   const addRoutine = useUserStore(state => state.addRoutine);
   const toggleRoutineCompletion = useUserStore(state => state.toggleRoutineCompletion);
   
@@ -54,10 +55,10 @@ export default function RoutinesScreen() {
   }, [toggleRoutineCompletion]);
 
   const filteredRoutines = useMemo(() => 
-    profile?.routines?.filter(routine => 
+    routines?.filter(routine => 
       showCompleted ? true : !routine.completed
     ) || [],
-    [profile?.routines, showCompleted]
+    [routines, showCompleted]
   );
 
   const groupedRoutines = useMemo(() => 
@@ -70,6 +71,14 @@ export default function RoutinesScreen() {
     }, {} as Record<string, Routine[]>),
     [filteredRoutines]
   );
+
+  const handleAddRoutineClick = useCallback(() => {
+    setModalVisible(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setModalVisible(false);
+  }, []);
 
   const formattedDate = useMemo(() => {
     const today = new Date();
@@ -88,7 +97,7 @@ export default function RoutinesScreen() {
           title: "Improvement Routines",
           headerRight: () => (
             <Pressable 
-              onPress={() => setModalVisible(true)}
+              onPress={handleAddRoutineClick}
               style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
             >
               <Plus color={Colors.dark.text} size={24} />
@@ -145,7 +154,7 @@ export default function RoutinesScreen() {
             </Text>
             <Pressable 
               style={styles.addButton}
-              onPress={() => setModalVisible(true)}
+              onPress={handleAddRoutineClick}
             >
               <Text style={styles.addButtonText}>Add Your First Routine</Text>
             </Pressable>
@@ -159,7 +168,7 @@ export default function RoutinesScreen() {
           </Text>
           
           {appearanceGoals
-            ?.filter(goal => !profile?.selectedImprovementRoutines?.includes(goal.id))
+            ?.filter(goal => !selectedImprovementRoutines?.includes(goal.id))
             ?.slice(0, 3)
             ?.map(goal => (
               <View key={goal.id} style={styles.suggestionCard}>
@@ -197,14 +206,14 @@ export default function RoutinesScreen() {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={handleCloseModal}
         testID="add-routine-modal"
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add New Routine</Text>
-              <Pressable onPress={() => setModalVisible(false)}>
+              <Pressable onPress={handleCloseModal}>
                 <X size={24} color={Colors.dark.text} />
               </Pressable>
             </View>
