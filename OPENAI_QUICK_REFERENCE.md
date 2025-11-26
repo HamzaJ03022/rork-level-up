@@ -1,9 +1,9 @@
-// Quick Reference: Using OpenAI in Your App
-// ============================================
+# Quick Reference: Using OpenAI in Your App
 
-// 1. ANALYZE APPEARANCE
-// Convert images and send to backend for AI analysis
+## 1. ANALYZE APPEARANCE
+Convert images and send to backend for AI analysis
 
+```typescript
 import { trpc } from '@/lib/trpc';
 import { convertImageToBase64 } from '@/lib/image-utils';
 
@@ -22,21 +22,25 @@ const analyzePhotos = async (faceUri: string, bodyUri: string) => {
   
   return result;
 };
+```
 
-// Result structure:
-// {
-//   face: { strengths: [], suggestions: [] },
-//   skin: { strengths: [], suggestions: [] },
-//   hair: { strengths: [], suggestions: [] },
-//   body: { strengths: [], suggestions: [] },
-//   posture: { strengths: [], suggestions: [] },
-//   priorityAreas: [],
-//   analysisDate: "2025-01-01T00:00:00.000Z"
-// }
+Result structure:
+```typescript
+{
+  face: { strengths: [], suggestions: [] },
+  skin: { strengths: [], suggestions: [] },
+  hair: { strengths: [], suggestions: [] },
+  body: { strengths: [], suggestions: [] },
+  posture: { strengths: [], suggestions: [] },
+  priorityAreas: [],
+  analysisDate: "2025-01-01T00:00:00.000Z"
+}
+```
 
-// 2. AI CHAT
-// Send messages and get contextual responses
+## 2. AI CHAT
+Send messages and get contextual responses
 
+```typescript
 const chatMutation = trpc.ai.chat.useMutation();
 
 const askAI = async (userMessage: string, previousMessages: any[] = []) => {
@@ -54,33 +58,39 @@ const askAI = async (userMessage: string, previousMessages: any[] = []) => {
   
   return result.message;
 };
+```
 
-// 3. LOADING & ERROR STATES
-// Use React Query states from mutations
+## 3. LOADING & ERROR STATES
+Use React Query states from mutations
 
+```typescript
 const {
   mutate: analyze,
-  isLoading,
+  isPending,
   isError,
   error,
   data
 } = trpc.ai.analyzeAppearance.useMutation();
 
 // In your component:
-if (isLoading) return <LoadingSpinner />;
+if (isPending) return <LoadingSpinner />;
 if (isError) return <ErrorMessage error={error.message} />;
 if (data) return <AnalysisResults data={data} />;
+```
 
-// 4. CONVERT IMAGES TO BASE64
-// Works on both web and mobile
+## 4. CONVERT IMAGES TO BASE64
+Works on both web and mobile
 
+```typescript
 import { convertImageToBase64 } from '@/lib/image-utils';
 
 const base64 = await convertImageToBase64(imageUri);
 // Returns: base64 string without "data:image/..." prefix
+```
 
-// 5. FULL EXAMPLE COMPONENT
+## 5. FULL EXAMPLE COMPONENT
 
+```typescript
 import React, { useState } from 'react';
 import { View, Button, Text } from 'react-native';
 import { trpc } from '@/lib/trpc';
@@ -113,9 +123,9 @@ export function AIAnalysisScreen() {
   return (
     <View>
       <Button
-        title={analyzeMutation.isLoading ? "Analyzing..." : "Analyze Photos"}
+        title={analyzeMutation.isPending ? "Analyzing..." : "Analyze Photos"}
         onPress={handleAnalyze}
-        disabled={analyzeMutation.isLoading}
+        disabled={analyzeMutation.isPending}
       />
       
       {result && (
@@ -128,10 +138,12 @@ export function AIAnalysisScreen() {
     </View>
   );
 }
+```
 
-// REMEMBER:
-// - Always convert images to base64 before sending
-// - Handle loading and error states
-// - Add your OpenAI API key to .env file
-// - Never commit .env file to git
-// - Monitor OpenAI usage and costs
+## REMEMBER:
+- Always convert images to base64 before sending
+- Handle loading and error states
+- Add your OpenAI API key to .env file
+- Never commit .env file to git
+- Monitor OpenAI usage and costs
+- Use `isPending` instead of `isLoading` in newer versions of React Query
