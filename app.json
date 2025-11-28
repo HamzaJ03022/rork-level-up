@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.level-up-app",
+      "bundleIdentifier": "com.4yit.levelup",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
@@ -31,7 +31,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.level-up-app",
+      "package": "com.4yit.levelup",
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
