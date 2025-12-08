@@ -7,8 +7,7 @@ import { Platform } from "react-native";
 import Colors from "@/constants/colors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc, trpcClient } from "@/lib/trpc";
-import { ClerkProvider, ClerkLoaded } from "@clerk/clerk-expo";
-import { tokenCache } from "@/lib/auth";
+
 
 import { ErrorBoundary } from "./error-boundary";
 
@@ -57,25 +56,13 @@ export default function RootLayout() {
     return null;
   }
 
-  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
-  if (!publishableKey) {
-    throw new Error(
-      'Missing Clerk Publishable Key. Please add EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY to your env file.'
-    );
-  }
-
   return (
     <ErrorBoundary>
-      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-        <ClerkLoaded>
-          <QueryClientProvider client={queryClient}>
-            <trpc.Provider client={trpcClient} queryClient={queryClient}>
-              <RootLayoutNav />
-            </trpc.Provider>
-          </QueryClientProvider>
-        </ClerkLoaded>
-      </ClerkProvider>
+      <QueryClientProvider client={queryClient}>
+        <trpc.Provider client={trpcClient} queryClient={queryClient}>
+          <RootLayoutNav />
+        </trpc.Provider>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }
@@ -98,20 +85,6 @@ function RootLayoutNav() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen 
-        name="sign-in" 
-        options={{ 
-          headerShown: false,
-          presentation: 'fullScreenModal'
-        }} 
-      />
-      <Stack.Screen 
-        name="sign-up" 
-        options={{ 
-          headerShown: false,
-          presentation: 'fullScreenModal'
-        }} 
-      />
       <Stack.Screen 
         name="welcome" 
         options={{ 
