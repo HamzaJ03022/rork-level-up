@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure } from "@/backend/trpc/create-context";
+import { analyzeImageWithVision } from "@/backend/services/openai";
 
-// This procedure analyzes a beard photo and suggests suitable beard styles
 export default protectedProcedure
   .input(z.object({ 
     photoUri: z.string(),
@@ -10,34 +10,54 @@ export default protectedProcedure
     beardDensity: z.string().optional()
   }))
   .mutation(async ({ input }) => {
-    // In a real implementation, we would send the photo to an AI service
-    // For this demo, we'll simulate an analysis with predefined responses
-
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Mock face shape detection (in a real app, this would be determined by AI)
-    const faceShapes = ["oval", "round", "square", "heart", "diamond", "oblong"];
-    const detectedFaceShape = input.faceShape || faceShapes[Math.floor(Math.random() * faceShapes.length)];
+    console.log('[Beard Analysis] Starting analysis...');
     
-    // Mock beard density detection
-    const beardDensities = ["patchy", "medium", "full", "thick"];
-    const detectedBeardDensity = input.beardDensity || beardDensities[Math.floor(Math.random() * beardDensities.length)];
+    const prompt = `Analyze this person's facial hair and provide beard style recommendations.
     
-    // Mock current beard style detection
-    const beardStyles = ["clean-shaven", "stubble", "short-beard", "medium-beard", "full-beard", "goatee"];
-    const detectedCurrentStyle = input.currentBeardStyle || beardStyles[Math.floor(Math.random() * beardStyles.length)];
+    Please analyze:
+    1. Face shape (oval, round, square, heart, diamond, or oblong)
+    2. Beard density (patchy, medium, full, or thick)
+    3. Current beard style (clean-shaven, stubble, short-beard, medium-beard, full-beard, or goatee)
+    
+    Based on your analysis, respond with ONLY a JSON object (no markdown, no code blocks) in this exact format:
+    {
+      "faceShape": "detected face shape",
+      "beardDensity": "detected beard density",
+      "currentStyle": "detected current style",
+      "explanation": "Brief explanation of why these characteristics were identified"
+    }`;
 
-    // Generate beard style suggestions based on face shape and beard density
-    const beardSuggestions = generateBeardSuggestions(detectedFaceShape, detectedBeardDensity, detectedCurrentStyle);
+    try {
+      const aiResponse = await analyzeImageWithVision({
+        imageUrl: input.photoUri,
+        prompt,
+      });
 
-    return {
-      faceShape: detectedFaceShape,
-      beardDensity: detectedBeardDensity,
-      currentStyle: detectedCurrentStyle,
-      suggestions: beardSuggestions,
-      analysisDate: new Date().toISOString()
-    };
+      console.log('[Beard Analysis] AI response:', aiResponse.content);
+      
+      const cleanedResponse = aiResponse.content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const analysis = JSON.parse(cleanedResponse);
+      
+      const detectedFaceShape = input.faceShape || analysis.faceShape;
+      const detectedBeardDensity = input.beardDensity || analysis.beardDensity;
+      const detectedCurrentStyle = input.currentBeardStyle || analysis.currentStyle;
+
+      const beardSuggestions = generateBeardSuggestions(detectedFaceShape, detectedBeardDensity, detectedCurrentStyle);
+
+      console.log('[Beard Analysis] Analysis complete');
+
+      return {
+        faceShape: detectedFaceShape,
+        beardDensity: detectedBeardDensity,
+        currentStyle: detectedCurrentStyle,
+        suggestions: beardSuggestions,
+        aiExplanation: analysis.explanation,
+        analysisDate: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('[Beard Analysis] Error:', error);
+      throw new Error('Failed to analyze beard photo. Please try again.');
+    }
   });
 
 // Helper function to generate beard style suggestions based on face shape and beard density

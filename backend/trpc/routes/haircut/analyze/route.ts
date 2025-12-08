@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure } from "@/backend/trpc/create-context";
+import { analyzeImageWithVision } from "@/backend/services/openai";
 
-// This procedure analyzes a haircut photo and suggests suitable haircuts
 export default protectedProcedure
   .input(z.object({ 
     photoUri: z.string(),
@@ -10,34 +10,54 @@ export default protectedProcedure
     currentHairLength: z.string().optional()
   }))
   .mutation(async ({ input }) => {
-    // In a real implementation, we would send the photo to an AI service
-    // For this demo, we'll simulate an analysis with predefined responses
-
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Mock face shape detection (in a real app, this would be determined by AI)
-    const faceShapes = ["oval", "round", "square", "heart", "diamond", "oblong"];
-    const detectedFaceShape = input.faceShape || faceShapes[Math.floor(Math.random() * faceShapes.length)];
+    console.log('[Haircut Analysis] Starting analysis...');
     
-    // Mock hair type detection (in a real app, this would be determined by AI)
-    const hairTypes = ["straight", "wavy", "curly", "coily"];
-    const detectedHairType = input.hairType || hairTypes[Math.floor(Math.random() * hairTypes.length)];
+    const prompt = `Analyze this person's appearance and provide haircut recommendations.
     
-    // Mock hair length detection
-    const hairLengths = ["short", "medium", "long"];
-    const detectedHairLength = input.currentHairLength || hairLengths[Math.floor(Math.random() * hairLengths.length)];
+    Please analyze:
+    1. Face shape (oval, round, square, heart, diamond, or oblong)
+    2. Hair type (straight, wavy, curly, or coily)
+    3. Current hair length (short, medium, or long)
+    
+    Based on your analysis, respond with ONLY a JSON object (no markdown, no code blocks) in this exact format:
+    {
+      "faceShape": "detected face shape",
+      "hairType": "detected hair type",
+      "hairLength": "detected hair length",
+      "explanation": "Brief explanation of why these characteristics were identified"
+    }`;
 
-    // Generate haircut suggestions based on face shape and hair type
-    const haircutSuggestions = generateHaircutSuggestions(detectedFaceShape, detectedHairType, detectedHairLength);
+    try {
+      const aiResponse = await analyzeImageWithVision({
+        imageUrl: input.photoUri,
+        prompt,
+      });
 
-    return {
-      faceShape: detectedFaceShape,
-      hairType: detectedHairType,
-      hairLength: detectedHairLength,
-      suggestions: haircutSuggestions,
-      analysisDate: new Date().toISOString()
-    };
+      console.log('[Haircut Analysis] AI response:', aiResponse.content);
+      
+      const cleanedResponse = aiResponse.content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const analysis = JSON.parse(cleanedResponse);
+      
+      const detectedFaceShape = input.faceShape || analysis.faceShape;
+      const detectedHairType = input.hairType || analysis.hairType;
+      const detectedHairLength = input.currentHairLength || analysis.hairLength;
+
+      const haircutSuggestions = generateHaircutSuggestions(detectedFaceShape, detectedHairType, detectedHairLength);
+
+      console.log('[Haircut Analysis] Analysis complete');
+
+      return {
+        faceShape: detectedFaceShape,
+        hairType: detectedHairType,
+        hairLength: detectedHairLength,
+        suggestions: haircutSuggestions,
+        aiExplanation: analysis.explanation,
+        analysisDate: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('[Haircut Analysis] Error:', error);
+      throw new Error('Failed to analyze haircut photo. Please try again.');
+    }
   });
 
 // Helper function to generate haircut suggestions based on face shape and hair type
