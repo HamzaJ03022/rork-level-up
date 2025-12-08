@@ -6,6 +6,8 @@ import { useUserStore } from '@/store/user-store';
 import { Brain, RefreshCw, ArrowLeft, Camera } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { AIAnalysisResult } from '@/types';
+import { trpc } from '@/lib/trpc';
+import { convertImageToBase64 } from '@/lib/image-utils';
 
 export default function AIAdviceScreen() {
   const router = useRouter();
@@ -60,15 +62,25 @@ export default function AIAdviceScreen() {
     }
   };
   
+  const analyzeAppearanceMutation = trpc.ai.analyzeAppearance.useMutation({
+    onSuccess: (data) => {
+      console.log('Analysis successful:', data);
+      setAIAnalysis(data);
+      setNewFacePhoto(null);
+      setNewBodyPhoto(null);
+      setPhotoError(null);
+    },
+    onError: (error) => {
+      console.error('Error during analysis:', error);
+      setPhotoError(error.message || 'Failed to analyze photos. Please try again.');
+    },
+  });
+
   const getNewAnalysis = async () => {
     setIsAnalyzing(true);
+    setPhotoError(null);
     
     try {
-      // In a real app, we would send the photos to an AI service
-      // For this demo, we'll simulate an analysis with a timeout
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Use the new photos if provided, otherwise use the profile photos
       const facePhotoToUse = newFacePhoto || profile?.facePhoto;
       const bodyPhotoToUse = newBodyPhoto || profile?.bodyPhoto;
       
@@ -78,92 +90,17 @@ export default function AIAdviceScreen() {
         return;
       }
       
-      // Check which routines the user currently follows
-      const currentRoutines = profile?.currentRoutines || [];
-      const hasSkincare = currentRoutines.some(r => r.includes('skincare'));
-      const hasWorkout = currentRoutines.some(r => r.includes('workout'));
-      const hasGrooming = currentRoutines.some(r => r.includes('grooming'));
-      const hasPosture = currentRoutines.some(r => r.includes('posture'));
-      const hasHydration = currentRoutines.some(r => r.includes('hydration'));
-      const hasProtein = currentRoutines.some(r => r.includes('protein'));
-
+      console.log('Converting images to base64...');
+      const facePhotoBase64 = facePhotoToUse ? await convertImageToBase64(facePhotoToUse) : undefined;
+      const bodyPhotoBase64 = bodyPhotoToUse ? await convertImageToBase64(bodyPhotoToUse) : undefined;
       
-      // Generate personalized analysis based on current routines
-      const mockAnalysis: AIAnalysisResult = {
-        face: {
-          strengths: [
-            hasGrooming ? "Your dedication to facial grooming is paying off" : "Good natural facial structure",
-            "Strong facial symmetry potential",
-            hasGrooming ? "Your attention to facial grooming shows in your appearance" : "Natural facial features with good potential"
-          ],
-          suggestions: [
-            hasSkincare ? "Take your skincare to the next level by adding targeted treatments for specific concerns" : "Starting a basic skincare routine would dramatically enhance your facial appearance",
-            hasGrooming ? "Experiment with different facial hair styles to find what best complements your face shape" : "Consider facial hair grooming to enhance your facial structure",
-            "Adding daily facial exercises would help define your jawline and facial muscles, taking your appearance to the next level"
-          ]
-        },
-        skin: {
-          strengths: [
-            hasSkincare ? "Your commitment to skincare is evident in your complexion" : "Natural skin tone with good potential",
-            hasSkincare ? "Your current skincare routine has established a good foundation" : "No major skin concerns visible",
-            hasHydration ? "Your hydration habits are benefiting your skin's appearance" : "Natural skin resilience"
-          ],
-          suggestions: [
-            hasSkincare ? "Level up your routine by adding exfoliation 2-3 times weekly for improved texture and glow" : "Starting with a basic cleanser and moisturizer would transform your skin's appearance",
-            hasSkincare ? "Adding a vitamin C serum would enhance your current routine and boost your skin's radiance" : "Daily SPF protection would prevent premature aging and maintain your skin's youthful appearance",
-            hasHydration ? "Continue your excellent hydration habits for optimal skin health" : "Increasing your daily water intake would dramatically improve your skin's appearance and health"
-          ]
-        },
-        hair: {
-          strengths: [
-            hasGrooming ? "Your attention to hair care is evident" : "Good natural hair density and texture",
-            hasGrooming ? "Your current hair maintenance provides a solid foundation" : "Natural hair color complements your complexion well",
-            hasGrooming ? "Regular grooming shows discipline and attention to detail" : "Hair has potential for various styling options"
-          ],
-          suggestions: [
-            hasGrooming ? "Experiment with different styling products to enhance texture and definition" : "A structured haircut would significantly elevate your appearance",
-            hasGrooming ? "Consider a professional consultation for a style that best frames your face shape" : "Regular trims every 4-6 weeks would keep your style looking intentional and fresh",
-            hasGrooming ? "Adding a weekly deep conditioning treatment would take your hair care to the next level" : "Developing a basic hair care routine would transform your overall appearance"
-          ]
-        },
-        body: {
-          strengths: [
-            hasWorkout ? "Your commitment to physical fitness is showing positive results" : "Good natural physique with potential",
-            hasWorkout ? "Current exercise routine has established a foundation to build upon" : "Balanced body proportions",
-            hasProtein ? "Your attention to nutrition supports your physical development" : "Natural frame with good potential for development"
-          ],
-          suggestions: [
-            hasWorkout ? "Incorporating more compound exercises would accelerate your physical development" : "Starting with just 2-3 strength training sessions weekly would transform your physique",
-            hasWorkout ? "Adding progressive overload to your routine would take your results to the next level" : "Building muscle would significantly enhance your overall appearance and confidence",
-            hasProtein ? "Continue prioritizing protein intake for optimal muscle development" : "Increasing protein consumption would support muscle growth and definition"
-          ]
-        },
-        posture: {
-          strengths: [
-            hasPosture ? "Your awareness of posture importance is evident" : "Natural stance with improvement potential",
-            hasPosture ? "Current posture habits provide a good foundation" : "No major postural issues observed"
-          ],
-          suggestions: [
-            hasPosture ? "Daily posture exercises would enhance your current efforts" : "Practicing standing tall with shoulders back would instantly improve your appearance",
-            hasPosture ? "Adding core-strengthening exercises would support your posture goals" : "Strengthening your core and back muscles would dramatically improve your posture",
-            hasPosture ? "Continue your posture awareness throughout the day" : "Setting hourly reminders to check posture would create lasting improvement"
-          ]
-        },
-        priorityAreas: [
-          !hasSkincare ? "Basic skincare routine" : "Advanced skincare techniques",
-          !hasWorkout ? "Strength training fundamentals" : "Progressive strength development",
-          !hasPosture ? "Posture improvement" : "Advanced posture refinement",
-          !hasGrooming ? "Grooming essentials" : "Refined grooming techniques",
-          !hasHydration ? "Hydration habits" : "Nutrition optimization"
-        ]
-      };
-      
-      // Update the analysis in the store
-      setAIAnalysis(mockAnalysis);
-      
-      // Clear the new photos
-      setNewFacePhoto(null);
-      setNewBodyPhoto(null);
+      console.log('Sending to AI for analysis...');
+      await analyzeAppearanceMutation.mutateAsync({
+        facePhotoBase64,
+        bodyPhotoBase64,
+        userGoals: profile?.selectedMotivationalGoals || [],
+        currentRoutines: profile?.currentRoutines || [],
+      });
       
     } catch (error) {
       console.error('Error during analysis:', error);
@@ -462,7 +399,7 @@ export default function AIAdviceScreen() {
                 </Pressable>
                 
                 <Text style={styles.disclaimer}>
-                  Note: This is a simulated AI analysis for demonstration purposes. In a real app, photos would be processed by advanced AI models.
+                  Your photos are analyzed using OpenAI&apos;s GPT-4 Vision for personalized appearance insights.
                 </Text>
               </View>
             )}
