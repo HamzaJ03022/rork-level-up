@@ -19,10 +19,10 @@ export function getOpenAIClient(): OpenAI {
 }
 
 export async function generateChatCompletion(params: {
-  messages: Array<{
+  messages: {
     role: 'system' | 'user' | 'assistant';
     content: string;
-  }>;
+  }[];
   model?: string;
   temperature?: number;
   maxTokens?: number;

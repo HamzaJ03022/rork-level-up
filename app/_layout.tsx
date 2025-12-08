@@ -134,6 +134,13 @@ function RootLayoutNav() {
           animation: Platform.OS === 'ios' ? 'default' : 'slide_from_right',
         }} 
       />
+      <Stack.Screen 
+        name="profile" 
+        options={{ 
+          title: "Profile",
+          animation: Platform.OS === 'ios' ? 'default' : 'slide_from_right',
+        }} 
+      />
     </Stack>
   );
 }
