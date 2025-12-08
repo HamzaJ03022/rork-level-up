@@ -121,7 +121,7 @@ export default function WelcomeScreen() {
             />
             <Image
               source={{
-                uri: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&q=80',
+                uri: 'https://r2-pub.rork.com/generated-images/b1dd7fe1-fa12-4bfe-a3ab-1fcc848d16e8.png',
               }}
               style={styles.heroImageCenter}
             />
