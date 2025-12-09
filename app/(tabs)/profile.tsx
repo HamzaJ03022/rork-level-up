@@ -3,7 +3,9 @@ import { StyleSheet, Text, View, ScrollView, Pressable, Alert, Platform, Image }
 import { Stack, useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
-import { LogOut, Calendar, Award, Settings, Ruler, Weight, CheckCircle } from 'lucide-react-native';
+import { useRevenueCat } from '@/store/revenuecat-store';
+import { LogOut, Calendar, Award, Settings, Ruler, Weight, CheckCircle, Crown, ChevronRight } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { appearanceGoals } from '@/constants/appearance-goals';
 import { motivationalGoals } from '@/constants/motivational-goals';
@@ -15,6 +17,8 @@ export default function ProfileScreen() {
   const completedTips = useUserStore(state => state.profile?.completedTips);
   const selectedImprovementRoutines = useUserStore(state => state.profile?.selectedImprovementRoutines);
   const selectedMotivationalGoals = useUserStore(state => state.profile?.selectedMotivationalGoals);
+  
+  const { isPro, activeSubscription, isLoading: subscriptionLoading } = useRevenueCat();
   
   const startDate = useMemo(() => 
     profile?.startDate 
@@ -267,6 +271,41 @@ export default function ProfileScreen() {
       </View>
       
       <View style={styles.actionsContainer}>
+        <Pressable 
+          style={styles.subscriptionButton} 
+          onPress={() => router.push(isPro ? '/customer-center' : '/paywall')}
+          testID="profile-subscription"
+        >
+          {isPro ? (
+            <>
+              <LinearGradient
+                colors={['#FF6B6B', '#FFD93D']}
+                style={styles.proIconGradient}
+              >
+                <Crown size={20} color="#fff" />
+              </LinearGradient>
+              <View style={styles.subscriptionContent}>
+                <Text style={styles.subscriptionTitle}>Level Up Pro</Text>
+                <Text style={styles.subscriptionSubtitle}>
+                  {activeSubscription?.willRenew ? 'Active Subscription' : 'Subscription Expires Soon'}
+                </Text>
+              </View>
+              <ChevronRight size={20} color={Colors.dark.text} />
+            </>
+          ) : (
+            <>
+              <View style={styles.upgradeIconContainer}>
+                <Crown size={20} color={Colors.dark.primary} />
+              </View>
+              <View style={styles.subscriptionContent}>
+                <Text style={styles.subscriptionTitle}>Upgrade to Pro</Text>
+                <Text style={styles.subscriptionSubtitle}>Unlock all features</Text>
+              </View>
+              <ChevronRight size={20} color={Colors.dark.primary} />
+            </>
+          )}
+        </Pressable>
+        
         <Pressable style={styles.actionButton} onPress={navigateToSettings} testID="profile-settings">
           <Settings size={20} color={Colors.dark.text} />
           <Text style={styles.actionText}>Settings</Text>
@@ -497,5 +536,44 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.dark.error,
     marginLeft: 12,
+  },
+  subscriptionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.dark.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 107, 0.3)',
+  },
+  proIconGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  upgradeIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subscriptionContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  subscriptionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.dark.text,
+    marginBottom: 2,
+  },
+  subscriptionSubtitle: {
+    fontSize: 13,
+    color: Colors.dark.subtext,
   },
 });

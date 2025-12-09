@@ -10,6 +10,7 @@ import { trpc, trpcClient } from "@/lib/trpc";
 
 
 import { ErrorBoundary } from "./error-boundary";
+import { RevenueCatProvider } from "@/store/revenuecat-store";
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
@@ -60,7 +61,9 @@ export default function RootLayout() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <RootLayoutNav />
+          <RevenueCatProvider>
+            <RootLayoutNav />
+          </RevenueCatProvider>
         </trpc.Provider>
       </QueryClientProvider>
     </ErrorBoundary>
@@ -139,6 +142,22 @@ function RootLayoutNav() {
         options={{ 
           title: "Profile",
           animation: Platform.OS === 'ios' ? 'default' : 'slide_from_right',
+        }} 
+      />
+      <Stack.Screen 
+        name="paywall" 
+        options={{ 
+          title: "Subscription",
+          presentation: 'modal',
+          headerShown: false,
+        }} 
+      />
+      <Stack.Screen 
+        name="customer-center" 
+        options={{ 
+          title: "Subscription",
+          presentation: 'modal',
+          headerShown: false,
         }} 
       />
     </Stack>
