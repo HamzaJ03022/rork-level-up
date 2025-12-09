@@ -20,6 +20,7 @@ export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
 
   useEffect(() => {
     configurePurchases();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const configurePurchases = async () => {

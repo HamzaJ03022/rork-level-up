@@ -27,7 +27,6 @@ import { useRevenueCat } from '@/store/revenuecat-store';
 export default function CustomerCenterScreen() {
   const router = useRouter();
   const {
-    customerInfo,
     activeSubscription,
     isPro,
     restorePurchases,

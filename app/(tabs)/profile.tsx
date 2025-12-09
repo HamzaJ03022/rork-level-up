@@ -18,7 +18,7 @@ export default function ProfileScreen() {
   const selectedImprovementRoutines = useUserStore(state => state.profile?.selectedImprovementRoutines);
   const selectedMotivationalGoals = useUserStore(state => state.profile?.selectedMotivationalGoals);
   
-  const { isPro, activeSubscription, isLoading: subscriptionLoading } = useRevenueCat();
+  const { isPro, activeSubscription } = useRevenueCat();
   
   const startDate = useMemo(() => 
     profile?.startDate 
