@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, Alert, Platform, Image } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, Href } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
 import { useRevenueCat } from '@/store/revenuecat-store';
@@ -93,7 +93,7 @@ export default function ProfileScreen() {
   }, [resetApp]);
 
   const navigateToSettings = useCallback(() => {
-    router.push('/settings');
+    router.push('/settings' as Href);
   }, [router]);
 
   const selectedMotivationalGoalDetails = useMemo(() => 
@@ -273,7 +273,7 @@ export default function ProfileScreen() {
       <View style={styles.actionsContainer}>
         <Pressable 
           style={styles.subscriptionButton} 
-          onPress={() => router.push(isPro ? '/customer-center' : '/paywall')}
+          onPress={() => router.push((isPro ? '/customer-center' : '/paywall') as Href)}
           testID="profile-subscription"
         >
           {isPro ? (

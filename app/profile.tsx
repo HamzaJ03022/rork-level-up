@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, Alert, Platform, Image } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, Href } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
 import { LogOut, Calendar, Award, Settings, Ruler, Weight, CheckCircle } from 'lucide-react-native';
@@ -73,7 +73,7 @@ export default function ProfileScreen() {
   };
 
   const navigateToSettings = () => {
-    router.push('/settings');
+    router.push('/settings' as Href);
   };
 
   // Get selected appearance goals

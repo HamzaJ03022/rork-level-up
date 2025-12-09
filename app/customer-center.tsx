@@ -9,7 +9,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -216,7 +216,7 @@ export default function CustomerCenterScreen() {
               </Text>
               <TouchableOpacity
                 style={styles.upgradeButton}
-                onPress={() => router.push('/paywall')}
+                onPress={() => router.push('/paywall' as Href)}
               >
                 <LinearGradient
                   colors={['#FF6B6B', '#FFD93D']}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter, Href } from 'expo-router';
 import Colors from '@/constants/colors';
 import { categories } from '@/constants/categories';
 import { tips } from '@/constants/tips';
@@ -34,7 +34,7 @@ export default function CategoryScreen() {
       });
       
       // Navigate to routines tab
-      router.push('/routines');
+      router.push('/routines' as Href);
     }
   };
 

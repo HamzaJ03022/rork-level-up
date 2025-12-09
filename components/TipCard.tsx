@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useMemo } from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import { Tip } from '@/constants/tips';
 import Colors from '@/constants/colors';
 import { Star, Check, Plus } from 'lucide-react-native';
@@ -20,7 +20,7 @@ const TipCard = ({ tip }: TipCardProps) => {
   const isCompleted = profile?.completedTips?.includes(tip.id) || false;
 
   const handlePress = () => {
-    router.push(`/tip/${tip.id}`);
+    router.push(`/tip/${tip.id}` as Href);
   };
 
   const handleMarkComplete = useCallback(() => {

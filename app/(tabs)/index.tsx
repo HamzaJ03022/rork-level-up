@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, Href } from 'expo-router';
 import Colors from '@/constants/colors';
 import { categories } from '@/constants/categories';
 import { tips } from '@/constants/tips';
@@ -20,7 +20,7 @@ export default function HomeScreen() {
   
   useEffect(() => {
     if (!isOnboarded) {
-      router.replace('/welcome');
+      router.replace('/welcome' as Href);
     }
   }, [isOnboarded, router]);
   
@@ -59,7 +59,7 @@ export default function HomeScreen() {
   );
 
   const handleViewAllRoutines = useCallback(() => {
-    router.push('/routines');
+    router.push('/routines' as Href);
   }, [router]);
 
   return (

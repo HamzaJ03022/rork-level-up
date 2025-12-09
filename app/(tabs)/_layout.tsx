@@ -1,5 +1,5 @@
 import React, { useEffect, memo } from "react";
-import { Tabs, useRouter } from "expo-router";
+import { Tabs, useRouter, Href } from "expo-router";
 import Colors from "@/constants/colors";
 import { Home, ListChecks, Camera, User } from "lucide-react-native";
 import { useUserStore } from "@/store/user-store";
@@ -10,7 +10,7 @@ const TabLayout = memo(function TabLayout() {
   
   useEffect(() => {
     if (!isOnboarded) {
-      router.replace('/onboarding');
+      router.replace('/onboarding' as Href);
     }
   }, [isOnboarded, router]);
 

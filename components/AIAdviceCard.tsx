@@ -2,7 +2,7 @@ import React, { memo, useCallback, useMemo } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import Colors from '@/constants/colors';
 import { Brain, ChevronRight } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import { useUserStore } from '@/store/user-store';
 
 const AIAdviceCard = () => {
@@ -20,7 +20,7 @@ const AIAdviceCard = () => {
   }, [hasAnalysis, aiAnalysis.lastAnalysis]);
 
   const handlePress = useCallback(() => {
-    router.push('/ai-advice');
+    router.push('/ai-advice' as Href);
   }, [router]);
 
   return (

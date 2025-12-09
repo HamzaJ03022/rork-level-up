@@ -64,7 +64,7 @@ export default function ProgressScreen() {
     router.push({
       pathname: '/photo-detail',
       params: { id: photo.id }
-    });
+    } as any);
   }, [router]);
 
   return (

@@ -8,7 +8,7 @@ import {
   Image,
   Animated
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import { 
@@ -93,7 +93,7 @@ export default function WelcomeScreen() {
   }, [heroFadeAnim, heroSlideAnim]);
 
   const handleGetStarted = () => {
-    router.push('/onboarding');
+    router.push('/onboarding' as Href);
   };
 
   return (

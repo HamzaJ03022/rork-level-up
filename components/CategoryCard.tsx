@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import { Category } from '@/constants/categories';
 import Colors from '@/constants/colors';
 import { HelpCircle } from 'lucide-react-native';
@@ -17,7 +17,7 @@ const CategoryCard = ({ category }: CategoryCardProps) => {
   };
 
   const handlePress = () => {
-    router.push(`/category/${category.id}`);
+    router.push(`/category/${category.id}` as Href);
   };
 
   return (
