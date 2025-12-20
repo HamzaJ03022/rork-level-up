@@ -34,9 +34,9 @@ export default function HomeScreen() {
   }, []);
   
   const recommendedTips = useMemo(() => {
-    if (!completedTips) return [];
+    const completed = completedTips || [];
     
-    const uncompletedTips = tips.filter(tip => !completedTips.includes(tip.id));
+    const uncompletedTips = tips.filter(tip => !completed.includes(tip.id));
     const shuffled = [...uncompletedTips].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, 2);
   }, [completedTips]);
