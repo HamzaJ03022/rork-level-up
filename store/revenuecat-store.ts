@@ -8,7 +8,7 @@ import Purchases, {
 } from 'react-native-purchases';
 import { Platform } from 'react-native';
 
-const REVENUECAT_API_KEY = 'test_YPzxPgnxJWqypxtMPWnuXfzBUPu';
+const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || 'test_YPzxPgnxJWqypxtMPWnuXfzBUPu';
 const ENTITLEMENT_ID = 'Level up Pro';
 
 export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
@@ -34,7 +34,7 @@ export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
         return;
       }
 
-      Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+      Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
       Purchases.configure({ apiKey: REVENUECAT_API_KEY });
 
       console.log('[RevenueCat] SDK configured successfully');
