@@ -40,7 +40,7 @@ export default function TipDetailScreen() {
   const tip = tips.find(t => t.id === id);
   const category = tip ? categories.find(cat => cat.id === tip.categoryId) : null;
   
-  const isCompleted = profile?.completedTips.includes(id || '');
+  const isCompleted = profile?.completedTips?.includes(id || '') ?? false;
   const isHaircutTip = tip?.id === 'grooming-1'; // "Find Your Ideal Haircut" tip
   const isBeardTip = tip?.id === 'grooming-2'; // "Master Beard Maintenance" tip
 

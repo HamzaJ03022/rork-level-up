@@ -168,7 +168,7 @@ export default function RoutinesScreen() {
           </Text>
           
           {appearanceGoals
-            ?.filter(goal => !selectedImprovementRoutines?.includes(goal.id))
+            ?.filter(goal => !(selectedImprovementRoutines?.includes(goal.id) ?? false))
             ?.slice(0, 3)
             ?.map(goal => (
               <View key={goal.id} style={styles.suggestionCard}>

@@ -17,7 +17,7 @@ const TipCard = ({ tip }: TipCardProps) => {
   const markTipCompleted = useUserStore(state => state.markTipCompleted);
   const addRoutine = useUserStore(state => state.addRoutine);
   
-  const isCompleted = profile?.completedTips?.includes(tip.id) || false;
+  const isCompleted = profile?.completedTips?.includes(tip.id) ?? false;
 
   const handlePress = () => {
     router.push(`/tip/${tip.id}` as Href);
