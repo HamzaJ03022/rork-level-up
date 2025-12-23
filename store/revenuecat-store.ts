@@ -8,7 +8,7 @@ import Purchases, {
 } from 'react-native-purchases';
 import { Platform } from 'react-native';
 
-const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || 'test_YPzxPgnxJWqypxtMPWnuXfzBUPu';
+const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '';
 const ENTITLEMENT_ID = 'Level up Pro';
 
 export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {

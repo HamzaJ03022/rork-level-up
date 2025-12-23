@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc, trpcClient } from "@/lib/trpc";
 
 
-import { ErrorBoundary } from "./error-boundary";
+
 import { RevenueCatProvider } from "@/store/revenuecat-store";
 
 export const unstable_settings = {
@@ -58,7 +58,7 @@ export default function RootLayout() {
   }
 
   return (
-    <ErrorBoundary>
+    
       <QueryClientProvider client={queryClient}>
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <RevenueCatProvider>
@@ -66,7 +66,7 @@ export default function RootLayout() {
           </RevenueCatProvider>
         </trpc.Provider>
       </QueryClientProvider>
-    </ErrorBoundary>
+    
   );
 }
 
