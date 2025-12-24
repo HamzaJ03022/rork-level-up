@@ -34,6 +34,13 @@ export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
         return;
       }
 
+      if (!REVENUECAT_API_KEY) {
+        console.warn('[RevenueCat] API key not configured, skipping initialization');
+        setIsConfigured(false);
+        setIsLoading(false);
+        return;
+      }
+
       Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
       Purchases.configure({ apiKey: REVENUECAT_API_KEY });
 
@@ -45,6 +52,7 @@ export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
     } catch (err) {
       console.error('[RevenueCat] Configuration error:', err);
       setError(err instanceof Error ? err.message : 'Failed to configure RevenueCat');
+      setIsConfigured(false);
       setIsLoading(false);
     }
   };
@@ -80,6 +88,11 @@ export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
   };
 
   const purchasePackage = async (pkg: PurchasesPackage) => {
+    if (!isConfigured) {
+      console.warn('[RevenueCat] SDK not configured');
+      return { success: false, error: 'RevenueCat not configured', userCancelled: false };
+    }
+
     try {
       console.log('[RevenueCat] Purchasing package:', pkg.identifier);
       const { customerInfo: info } = await Purchases.purchasePackage(pkg);
@@ -102,6 +115,11 @@ export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
   };
 
   const restorePurchases = async () => {
+    if (!isConfigured) {
+      console.warn('[RevenueCat] SDK not configured');
+      return { success: false, error: 'RevenueCat not configured' };
+    }
+
     try {
       console.log('[RevenueCat] Restoring purchases...');
       const info = await Purchases.restorePurchases();
