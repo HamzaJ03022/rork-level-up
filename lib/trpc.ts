@@ -22,6 +22,17 @@ export const trpcClient = trpc.createClient({
       url: `${getBaseUrl()}/api/trpc`,
       transformer: superjson,
       headers: {},
+      fetch: async (url, options) => {
+        try {
+          return await fetch(url, options as RequestInit);
+        } catch (error) {
+          console.error('[tRPC] Network error:', error);
+          return new Response(
+            JSON.stringify({ error: { message: 'Network error' } }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+      },
     }),
   ],
 });

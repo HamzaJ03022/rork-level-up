@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc, trpcClient } from "@/lib/trpc";
 
 
-
+import { ErrorBoundary } from "./error-boundary";
 import { RevenueCatProvider } from "@/store/revenuecat-store";
 
 export const unstable_settings = {
@@ -21,13 +21,15 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5,
       gcTime: 1000 * 60 * 10,
-      retry: 1,
+      retry: 0,
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       refetchOnReconnect: false,
+      networkMode: 'offlineFirst',
     },
     mutations: {
-      retry: 1,
+      retry: 0,
+      networkMode: 'offlineFirst',
     },
   },
 });
@@ -58,7 +60,7 @@ export default function RootLayout() {
   }
 
   return (
-    
+    <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <trpc.Provider client={trpcClient} queryClient={queryClient}>
           <RevenueCatProvider>
@@ -66,7 +68,7 @@ export default function RootLayout() {
           </RevenueCatProvider>
         </trpc.Provider>
       </QueryClientProvider>
-    
+    </ErrorBoundary>
   );
 }
 
