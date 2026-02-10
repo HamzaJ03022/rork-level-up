@@ -1,19 +1,9 @@
-import React, { useEffect, memo } from "react";
-import { Tabs, useRouter, Href } from "expo-router";
+import React, { memo } from "react";
+import { Tabs } from "expo-router";
 import Colors from "@/constants/colors";
 import { Home, ListChecks, Camera, User } from "lucide-react-native";
-import { useUserStore } from "@/store/user-store";
 
 const TabLayout = memo(function TabLayout() {
-  const router = useRouter();
-  const isOnboarded = useUserStore(state => state.isOnboarded);
-  
-  useEffect(() => {
-    if (!isOnboarded) {
-      router.replace('/onboarding' as Href);
-    }
-  }, [isOnboarded, router]);
-
   return (
     <Tabs
       screenOptions={{

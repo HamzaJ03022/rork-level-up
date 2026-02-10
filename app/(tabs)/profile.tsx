@@ -4,6 +4,7 @@ import { Stack, useRouter, Href } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
 import { useRevenueCat } from '@/store/revenuecat-store';
+import { useAuth } from '@clerk/clerk-expo';
 import { LogOut, Calendar, Award, Settings, Ruler, Weight, CheckCircle, Crown, ChevronRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,6 +20,7 @@ export default function ProfileScreen() {
   const selectedMotivationalGoals = useUserStore(state => state.profile?.selectedMotivationalGoals);
   
   const { isPro, activeSubscription } = useRevenueCat();
+  const { signOut } = useAuth();
   
   const startDate = useMemo(() => 
     profile?.startDate 
@@ -65,32 +67,35 @@ export default function ProfileScreen() {
     return `${profile.weight.value} ${profile.weight.unit}`;
   }, [profile?.weight]);
   
-  const resetApp = useCallback(async () => {
+  const handleSignOut = useCallback(async () => {
     try {
+      console.log('[Auth] Signing out...');
+      await signOut();
       await AsyncStorage.clear();
       setOnboarded(false);
+      console.log('[Auth] Sign out complete');
     } catch (error) {
-      console.error('Error clearing storage:', error);
+      console.error('Error signing out:', error);
     }
-  }, [setOnboarded]);
+  }, [signOut, setOnboarded]);
 
   const handleLogout = useCallback(() => {
     if (Platform.OS === 'web') {
-      const confirmed = window.confirm('Are you sure you want to log out? This will reset all your data.');
+      const confirmed = window.confirm('Are you sure you want to log out?');
       if (confirmed) {
-        resetApp();
+        handleSignOut();
       }
     } else {
       Alert.alert(
         'Log Out',
-        'Are you sure you want to log out? This will reset all your data.',
+        'Are you sure you want to log out?',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Log Out', style: 'destructive', onPress: resetApp }
+          { text: 'Log Out', style: 'destructive', onPress: handleSignOut }
         ]
       );
     }
-  }, [resetApp]);
+  }, [handleSignOut]);
 
   const navigateToSettings = useCallback(() => {
     router.push('/settings' as Href);
