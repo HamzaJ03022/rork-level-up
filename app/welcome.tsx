@@ -1,339 +1,229 @@
-import React, { useRef, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  Pressable, 
-  ScrollView,
-  Image,
-  Animated
+import React, { useRef, useEffect, useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Pressable,
+  Animated,
 } from 'react-native';
 import { useRouter, Href } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import Colors from '@/constants/colors';
-import { 
-  Sparkles, 
-  Zap, 
-  TrendingUp, 
-  Heart, 
-  Users, 
-  Award,
+import {
+  Sparkles,
+  Target,
+  TrendingUp,
   ArrowRight,
-  Star
+  ChevronRight,
 } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 
-interface BenefitCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  color: string;
-  delay: number;
-}
-
-const BenefitCard = ({ icon, title, description, color, delay }: BenefitCardProps) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        delay,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        delay,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [delay, fadeAnim, slideAnim]);
-
-  return (
-    <Animated.View
-      style={[
-        styles.benefitCard,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
-      <View style={[styles.benefitIconContainer, { backgroundColor: `${color}20` }]}>
-        {icon}
-      </View>
-      <Text style={styles.benefitTitle}>{title}</Text>
-      <Text style={styles.benefitDescription}>{description}</Text>
-    </Animated.View>
-  );
-};
+const PAGES = [
+  {
+    icon: Sparkles,
+    iconColor: '#F59E0B',
+    accentColor: '#F59E0B',
+    tagline: 'AI-Powered',
+    title: 'Your Personal\nGlow Up Coach',
+    description:
+      'Get tailored advice for skincare, fitness, grooming, and style — all based on your unique features.',
+  },
+  {
+    icon: Target,
+    iconColor: '#10B981',
+    accentColor: '#10B981',
+    tagline: 'Personalized',
+    title: 'Routines Built\nJust For You',
+    description:
+      'We create daily habits that fit your lifestyle and goals, so you can level up without the guesswork.',
+  },
+  {
+    icon: TrendingUp,
+    iconColor: '#6366F1',
+    accentColor: '#6366F1',
+    tagline: 'Track Progress',
+    title: 'See Real\nResults Over Time',
+    description:
+      'Document your transformation with progress photos and watch your confidence grow week by week.',
+  },
+];
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const heroFadeAnim = useRef(new Animated.Value(0)).current;
-  const heroSlideAnim = useRef(new Animated.Value(50)).current;
+  const insets = useSafeAreaInsets();
+  const [currentPage, setCurrentPage] = useState(0);
 
-  useEffect(() => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const contentSlide = useRef(new Animated.Value(20)).current;
+  const iconScale = useRef(new Animated.Value(0.5)).current;
+  const dotWidths = useRef(PAGES.map((_, i) => new Animated.Value(i === 0 ? 24 : 8))).current;
+
+  const animateIn = () => {
+    fadeAnim.setValue(0);
+    contentSlide.setValue(20);
+    iconScale.setValue(0.5);
+
     Animated.parallel([
-      Animated.timing(heroFadeAnim, {
+      Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 500,
         useNativeDriver: true,
       }),
-      Animated.timing(heroSlideAnim, {
+      Animated.spring(contentSlide, {
         toValue: 0,
-        duration: 800,
+        tension: 60,
+        friction: 10,
+        useNativeDriver: true,
+      }),
+      Animated.spring(iconScale, {
+        toValue: 1,
+        tension: 60,
+        friction: 8,
         useNativeDriver: true,
       }),
     ]).start();
-  }, [heroFadeAnim, heroSlideAnim]);
+  };
 
-  const handleGetStarted = () => {
+  useEffect(() => {
+    animateIn();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    PAGES.forEach((_, i) => {
+      Animated.timing(dotWidths[i], {
+        toValue: i === currentPage ? 24 : 8,
+        duration: 250,
+        useNativeDriver: false,
+      }).start();
+    });
+  }, [currentPage, dotWidths]);
+
+  const goToPage = (index: number) => {
+    fadeAnim.setValue(0);
+    contentSlide.setValue(30);
+    iconScale.setValue(0.6);
+    setCurrentPage(index);
+
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(contentSlide, {
+        toValue: 0,
+        tension: 60,
+        friction: 10,
+        useNativeDriver: true,
+      }),
+      Animated.spring(iconScale, {
+        toValue: 1,
+        tension: 60,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handleNext = () => {
+    if (currentPage < PAGES.length - 1) {
+      goToPage(currentPage + 1);
+    } else {
+      router.push('/onboarding' as Href);
+    }
+  };
+
+  const handleSkip = () => {
     router.push('/onboarding' as Href);
   };
 
+  const page = PAGES[currentPage];
+  const IconComponent = page.icon;
+  const isLast = currentPage === PAGES.length - 1;
+
   return (
     <View style={styles.container}>
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <LinearGradient
+        colors={['#121212', '#1a1a2e', '#121212']}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
+
+      <View style={[styles.topBar, { paddingTop: insets.top + 12 }]}>
+        <Text style={styles.logo}>Level Up</Text>
+        {!isLast && (
+          <Pressable onPress={handleSkip} hitSlop={12}>
+            <Text style={styles.skipText}>Skip</Text>
+          </Pressable>
+        )}
+      </View>
+
+      <View style={styles.body}>
         <Animated.View
           style={[
-            styles.heroSection,
+            styles.iconWrapper,
             {
-              opacity: heroFadeAnim,
-              transform: [{ translateY: heroSlideAnim }],
+              opacity: fadeAnim,
+              transform: [{ scale: iconScale }],
             },
           ]}
         >
-          <View style={styles.heroImageContainer}>
-            <Image
-              source={{
-                uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
-              }}
-              style={styles.heroImageLeft}
-            />
-            <Image
-              source={{
-                uri: 'https://r2-pub.rork.com/generated-images/b1dd7fe1-fa12-4bfe-a3ab-1fcc848d16e8.png',
-              }}
-              style={styles.heroImageCenter}
-            />
-            <Image
-              source={{
-                uri: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&q=80',
-              }}
-              style={styles.heroImageRight}
-            />
-          </View>
-
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>Level Up Your</Text>
-            <Text style={styles.titleGradient}>Appearance</Text>
-          </View>
-
-          <Text style={styles.subtitle}>
-            Transform your confidence with personalized routines, AI-powered insights, and proven strategies for looking your best
-          </Text>
-
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>10k+</Text>
-              <Text style={styles.statLabel}>Active Users</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>4.9</Text>
-              <View style={styles.ratingContainer}>
-                <Star size={16} color={Colors.dark.warning} fill={Colors.dark.warning} />
-                <Text style={styles.statLabel}>Rating</Text>
-              </View>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>85%</Text>
-              <Text style={styles.statLabel}>See Results</Text>
+          <View style={[styles.iconCircle, { backgroundColor: `${page.accentColor}15` }]}>
+            <View style={[styles.iconInner, { backgroundColor: `${page.accentColor}25` }]}>
+              <IconComponent size={40} color={page.iconColor} />
             </View>
           </View>
         </Animated.View>
 
-        <View style={styles.benefitsSection}>
-          <Text style={styles.sectionTitle}>Why Level Up?</Text>
-          
-          <BenefitCard
-            icon={<TrendingUp size={32} color={Colors.dark.primary} />}
-            title="Improved Appearance"
-            description="Track your transformation with personalized routines for skincare, fitness, grooming, and style"
-            color={Colors.dark.primary}
-            delay={200}
-          />
-
-          <BenefitCard
-            icon={<Sparkles size={32} color={Colors.dark.secondary} />}
-            title="Boosted Confidence"
-            description="Feel more confident in social and professional situations as you see real progress"
-            color={Colors.dark.secondary}
-            delay={300}
-          />
-
-          <BenefitCard
-            icon={<Zap size={32} color={Colors.dark.warning} />}
-            title="AI-Powered Insights"
-            description="Get personalized recommendations based on your unique features and goals"
-            color={Colors.dark.warning}
-            delay={400}
-          />
-
-          <BenefitCard
-            icon={<Heart size={32} color={Colors.dark.error} />}
-            title="Better First Impressions"
-            description="Make lasting impressions in dating, interviews, and social settings"
-            color={Colors.dark.error}
-            delay={500}
-          />
-
-          <BenefitCard
-            icon={<Users size={32} color={Colors.dark.success} />}
-            title="Social Success"
-            description="Enhance your attractiveness and social presence with proven strategies"
-            color={Colors.dark.success}
-            delay={600}
-          />
-
-          <BenefitCard
-            icon={<Award size={32} color="#06B6D4" />}
-            title="Professional Edge"
-            description="Stand out in your career with a polished, professional appearance"
-            color="#06B6D4"
-            delay={700}
-          />
-        </View>
-
-        <View style={styles.howItWorksSection}>
-          <Text style={styles.sectionTitle}>How It Works</Text>
-
-          <View style={styles.stepCard}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>1</Text>
-            </View>
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>Upload Your Photos</Text>
-              <Text style={styles.stepDescription}>
-                Take clear photos of your face and body for AI analysis
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.stepCard}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>2</Text>
-            </View>
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>Get AI Analysis</Text>
-              <Text style={styles.stepDescription}>
-                Receive personalized insights about your appearance and improvement areas
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.stepCard}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>3</Text>
-            </View>
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>Follow Your Routines</Text>
-              <Text style={styles.stepDescription}>
-                Complete daily routines tailored to your goals and lifestyle
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.stepCard}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>4</Text>
-            </View>
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>Track Progress</Text>
-              <Text style={styles.stepDescription}>
-                Watch your transformation with progress photos and insights
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.testimonialSection}>
-          <Text style={styles.sectionTitle}>Success Stories</Text>
-
-          <View style={styles.testimonialCard}>
-            <View style={styles.testimonialHeader}>
-              <Image
-                source={{ uri: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80' }}
-                style={styles.testimonialAvatar}
-              />
-              <View style={styles.testimonialInfo}>
-                <Text style={styles.testimonialName}>Michael R.</Text>
-                <View style={styles.ratingStars}>
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} size={14} color={Colors.dark.warning} fill={Colors.dark.warning} />
-                  ))}
-                </View>
-              </View>
-            </View>
-            <Text style={styles.testimonialText}>
-              &ldquo;Level Up changed my life. After 3 months, I feel more confident than ever. My dating life improved dramatically!&rdquo;
-            </Text>
-          </View>
-
-          <View style={styles.testimonialCard}>
-            <View style={styles.testimonialHeader}>
-              <Image
-                source={{ uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80' }}
-                style={styles.testimonialAvatar}
-              />
-              <View style={styles.testimonialInfo}>
-                <Text style={styles.testimonialName}>David L.</Text>
-                <View style={styles.ratingStars}>
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} size={14} color={Colors.dark.warning} fill={Colors.dark.warning} />
-                  ))}
-                </View>
-              </View>
-            </View>
-            <Text style={styles.testimonialText}>
-              &ldquo;The AI insights were spot-on. I finally have a clear plan for improving my appearance. Highly recommend!&rdquo;
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.ctaSection}>
-          <Text style={styles.ctaTitle}>Ready to Transform?</Text>
-          <Text style={styles.ctaDescription}>
-            Join thousands of users who are already on their journey to looking and feeling their best
-          </Text>
-        </View>
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <Pressable
-          style={styles.getStartedButton}
-          onPress={handleGetStarted}
-          testID="get-started-button"
+        <Animated.View
+          style={{
+            opacity: fadeAnim,
+            transform: [{ translateY: contentSlide }],
+          }}
         >
-          <LinearGradient
-            colors={[Colors.dark.primary, Colors.dark.secondary]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.buttonGradient}
-          >
-            <Text style={styles.buttonText}>Get Started Free</Text>
-            <ArrowRight size={20} color="#FFFFFF" />
-          </LinearGradient>
+          <View style={[styles.taglinePill, { backgroundColor: `${page.accentColor}18` }]}>
+            <Text style={[styles.taglineText, { color: page.accentColor }]}>{page.tagline}</Text>
+          </View>
+
+          <Text style={styles.title}>{page.title}</Text>
+          <Text style={styles.description}>{page.description}</Text>
+        </Animated.View>
+      </View>
+
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={styles.pagination}>
+          {PAGES.map((_, i) => (
+            <Pressable key={i} onPress={() => goToPage(i)} hitSlop={8}>
+              <Animated.View
+                style={[
+                  styles.dot,
+                  {
+                    width: dotWidths[i],
+                    backgroundColor: i === currentPage ? page.accentColor : '#333',
+                  },
+                ]}
+              />
+            </Pressable>
+          ))}
+        </View>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.ctaButton,
+            { backgroundColor: page.accentColor, opacity: pressed ? 0.85 : 1 },
+          ]}
+          onPress={handleNext}
+          testID="welcome-next-button"
+        >
+          <Text style={styles.ctaText}>{isLast ? 'Get Started' : 'Continue'}</Text>
+          {isLast ? (
+            <ArrowRight size={20} color="#FFF" />
+          ) : (
+            <ChevronRight size={20} color="#FFF" />
+          )}
         </Pressable>
       </View>
     </View>
@@ -343,269 +233,104 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.dark.background,
+    backgroundColor: '#121212',
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 100,
-  },
-  heroSection: {
-    paddingTop: 60,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  heroImageContainer: {
+  topBar: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 8,
+  },
+  logo: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: '#FFF',
+    letterSpacing: -0.5,
+  },
+  skipText: {
+    fontSize: 15,
+    color: '#888',
+    fontWeight: '500' as const,
+  },
+  body: {
+    flex: 1,
     justifyContent: 'center',
-    marginBottom: 32,
-    height: 200,
-  },
-  heroImageLeft: {
-    width: 80,
-    height: 120,
-    borderRadius: 16,
-    marginRight: -10,
-    transform: [{ rotate: '-8deg' }],
-    zIndex: 1,
-  },
-  heroImageCenter: {
-    width: 100,
-    height: 150,
-    borderRadius: 20,
-    borderWidth: 3,
-    borderColor: Colors.dark.primary,
-    zIndex: 2,
-  },
-  heroImageRight: {
-    width: 80,
-    height: 120,
-    borderRadius: 16,
-    marginLeft: -10,
-    transform: [{ rotate: '8deg' }],
-    zIndex: 1,
-  },
-  titleContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 32,
+  },
+  iconWrapper: {
+    marginBottom: 32,
+  },
+  iconCircle: {
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconInner: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  taglinePill: {
+    alignSelf: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  taglineText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase' as const,
   },
   title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: Colors.dark.text,
+    fontSize: 34,
+    fontWeight: '800' as const,
+    color: '#FFF',
     textAlign: 'center',
+    lineHeight: 42,
+    letterSpacing: -0.8,
+    marginBottom: 16,
   },
-  titleGradient: {
-    fontSize: 42,
-    fontWeight: 'bold',
-    color: Colors.dark.primary,
-    textAlign: 'center',
-  },
-  subtitle: {
+  description: {
     fontSize: 16,
-    color: Colors.dark.subtext,
+    color: '#999',
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 32,
-    paddingHorizontal: 16,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    width: '100%',
-    backgroundColor: Colors.dark.card,
-    borderRadius: 16,
-    padding: 20,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.dark.primary,
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: Colors.dark.subtext,
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: Colors.dark.border,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  benefitsSection: {
-    paddingHorizontal: 24,
-    marginBottom: 40,
-  },
-  sectionTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: Colors.dark.text,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  benefitCard: {
-    backgroundColor: Colors.dark.card,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  benefitIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  benefitTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.dark.text,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  benefitDescription: {
-    fontSize: 14,
-    color: Colors.dark.subtext,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  howItWorksSection: {
-    paddingHorizontal: 24,
-    marginBottom: 40,
-  },
-  stepCard: {
-    flexDirection: 'row',
-    backgroundColor: Colors.dark.card,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    alignItems: 'flex-start',
-  },
-  stepNumber: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.dark.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  stepNumberText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  stepContent: {
-    flex: 1,
-  },
-  stepTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.dark.text,
-    marginBottom: 8,
-  },
-  stepDescription: {
-    fontSize: 14,
-    color: Colors.dark.subtext,
-    lineHeight: 20,
-  },
-  testimonialSection: {
-    paddingHorizontal: 24,
-    marginBottom: 40,
-  },
-  testimonialCard: {
-    backgroundColor: Colors.dark.card,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-  },
-  testimonialHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  testimonialAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    marginRight: 12,
-  },
-  testimonialInfo: {
-    flex: 1,
-  },
-  testimonialName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.dark.text,
-    marginBottom: 4,
-  },
-  ratingStars: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  testimonialText: {
-    fontSize: 14,
-    color: Colors.dark.subtext,
-    lineHeight: 20,
-    fontStyle: 'italic',
-  },
-  ctaSection: {
-    paddingHorizontal: 24,
-    alignItems: 'center',
-  },
-  ctaTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: Colors.dark.text,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  ctaDescription: {
-    fontSize: 16,
-    color: Colors.dark.subtext,
-    textAlign: 'center',
-    lineHeight: 24,
+    maxWidth: 320,
+    alignSelf: 'center',
   },
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-    paddingBottom: 40,
-    backgroundColor: Colors.dark.background,
-    borderTopWidth: 1,
-    borderTopColor: Colors.dark.border,
+    paddingHorizontal: 24,
+    gap: 24,
   },
-  getStartedButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
+  pagination: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
   },
-  buttonGradient: {
+  dot: {
+    height: 8,
+    borderRadius: 4,
+  },
+  ctaButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 18,
-    paddingHorizontal: 32,
+    borderRadius: 16,
+    gap: 8,
   },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginRight: 8,
+  ctaText: {
+    fontSize: 17,
+    fontWeight: '700' as const,
+    color: '#FFF',
   },
 });
