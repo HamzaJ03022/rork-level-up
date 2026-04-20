@@ -16,6 +16,7 @@ import { X, Check, Crown, Zap, Star, Sparkles } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useRevenueCat } from '@/store/revenuecat-store';
 import { PurchasesPackage } from 'react-native-purchases';
+import LegalLinks from '@/components/LegalLinks';
 
 const FEATURES = [
   { icon: Crown, text: 'Unlimited AI-powered appearance analysis' },
@@ -324,6 +325,9 @@ export default function PaywallScreen() {
           <Text style={styles.footerText}>
             Subscriptions auto-renew unless cancelled 24 hours before the end of the current period.
           </Text>
+          <View style={styles.legalLinksWrap}>
+            <LegalLinks variant="compact" />
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -562,5 +566,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  legalLinksWrap: {
+    marginTop: 12,
+    alignItems: 'center',
   },
 });

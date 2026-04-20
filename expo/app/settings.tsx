@@ -3,8 +3,10 @@ import { StyleSheet, Text, View, ScrollView, TextInput, Pressable, Switch, Platf
 import { Stack, useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
-import { Save, Camera, ArrowLeft } from 'lucide-react-native';
+import { Save, Camera, ArrowLeft, FileText, Shield, ChevronRight } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { Linking } from 'react-native';
+import { LEGAL_URLS } from '@/constants/legal';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -369,6 +371,32 @@ export default function SettingsScreen() {
             <Text style={styles.saveButtonText}>Save Changes</Text>
           </Pressable>
         </View>
+
+        <Text style={styles.sectionTitle}>Legal</Text>
+
+        <Pressable
+          style={styles.legalRow}
+          onPress={() => Linking.openURL(LEGAL_URLS.termsOfService)}
+          testID="settings-tos"
+        >
+          <View style={styles.legalRowLeft}>
+            <FileText size={20} color={Colors.dark.primary} />
+            <Text style={styles.legalRowText}>Terms of Service</Text>
+          </View>
+          <ChevronRight size={18} color={Colors.dark.inactive} />
+        </Pressable>
+
+        <Pressable
+          style={styles.legalRow}
+          onPress={() => Linking.openURL(LEGAL_URLS.privacyPolicy)}
+          testID="settings-privacy"
+        >
+          <View style={styles.legalRowLeft}>
+            <Shield size={20} color={Colors.dark.primary} />
+            <Text style={styles.legalRowText}>Privacy Policy</Text>
+          </View>
+          <ChevronRight size={18} color={Colors.dark.inactive} />
+        </Pressable>
       </ScrollView>
     </View>
   );
@@ -528,5 +556,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.dark.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  legalRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  legalRowText: {
+    fontSize: 16,
+    fontWeight: '500' as const,
+    color: Colors.dark.text,
   },
 });

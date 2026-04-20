@@ -18,6 +18,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, UserPlus, ShieldCheck } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import * as Haptics from 'expo-haptics';
+import AppleSignInButton from '@/components/AppleSignInButton';
+import LegalLinks from '@/components/LegalLinks';
 
 export default function SignUpScreen() {
   const { signUp, setActive, isLoaded } = useSignUp();
@@ -393,6 +395,10 @@ export default function SignUpScreen() {
               <View style={styles.dividerLine} />
             </View>
 
+            <View style={styles.appleButtonWrap}>
+              <AppleSignInButton testID="sign-up-apple" />
+            </View>
+
             <View style={styles.signUpRow}>
               <Text style={styles.signUpText}>Already have an account? </Text>
               <Link href={'/sign-in' as Href} asChild>
@@ -400,6 +406,11 @@ export default function SignUpScreen() {
                   <Text style={styles.signUpLink}>Sign In</Text>
                 </Pressable>
               </Link>
+            </View>
+
+            <View style={styles.legalWrap}>
+              <Text style={styles.legalIntro}>By creating an account, you agree to our</Text>
+              <LegalLinks />
             </View>
           </Animated.View>
         </ScrollView>
@@ -543,5 +554,18 @@ const styles = StyleSheet.create({
     color: '#F59E0B',
     fontSize: 15,
     fontWeight: '600' as const,
+  },
+  appleButtonWrap: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  legalWrap: {
+    marginTop: 20,
+    alignItems: 'center',
+    gap: 4,
+  },
+  legalIntro: {
+    color: Colors.dark.inactive,
+    fontSize: 12,
   },
 });
