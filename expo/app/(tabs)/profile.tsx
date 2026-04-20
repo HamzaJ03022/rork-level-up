@@ -5,6 +5,15 @@ import Colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
 import { useRevenueCat } from '@/store/revenuecat-store';
 import { useAuth } from '@clerk/clerk-expo';
+
+const HAS_CLERK = !!process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+function useOptionalSignOut(): (() => Promise<unknown>) | null {
+  if (!HAS_CLERK) return null;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const auth = useAuth();
+  return auth.signOut as () => Promise<unknown>;
+}
 import { LogOut, Calendar, Award, Settings, Ruler, Weight, CheckCircle, Crown, ChevronRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,7 +29,7 @@ export default function ProfileScreen() {
   const selectedMotivationalGoals = useUserStore(state => state.profile?.selectedMotivationalGoals);
   
   const { isPro, activeSubscription } = useRevenueCat();
-  const { signOut } = useAuth();
+  const signOut = useOptionalSignOut();
   
   const startDate = useMemo(() => 
     profile?.startDate 
@@ -70,7 +79,9 @@ export default function ProfileScreen() {
   const handleSignOut = useCallback(async () => {
     try {
       console.log('[Auth] Signing out...');
-      await signOut();
+      if (signOut) {
+        await signOut();
+      }
       await AsyncStorage.clear();
       setOnboarded(false);
       console.log('[Auth] Sign out complete');

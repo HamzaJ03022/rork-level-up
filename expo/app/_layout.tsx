@@ -13,6 +13,7 @@ import { RevenueCatProvider } from "@/store/revenuecat-store";
 import { useUserStore } from "@/store/user-store";
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
+const HAS_CLERK = CLERK_PUBLISHABLE_KEY.length > 0;
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
@@ -61,15 +62,24 @@ export default function RootLayout() {
     return null;
   }
 
+  const content = (
+    <QueryClientProvider client={queryClient}>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <RevenueCatProvider>
+          {HAS_CLERK ? <AuthGate /> : <RootLayoutNav />}
+        </RevenueCatProvider>
+      </trpc.Provider>
+    </QueryClientProvider>
+  );
+
+  if (!HAS_CLERK) {
+    console.warn('[Auth] Clerk publishable key missing, running without authentication');
+    return content;
+  }
+
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
-      <QueryClientProvider client={queryClient}>
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <RevenueCatProvider>
-            <AuthGate />
-          </RevenueCatProvider>
-        </trpc.Provider>
-      </QueryClientProvider>
+      {content}
     </ClerkProvider>
   );
 }
