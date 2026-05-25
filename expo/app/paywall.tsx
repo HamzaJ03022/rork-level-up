@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { X, Check, Crown, Zap, Star, Sparkles } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useRevenueCat } from '@/store/revenuecat-store';
-import { PurchasesPackage } from 'react-native-purchases';
+type PurchasesPackage = any;
 import LegalLinks from '@/components/LegalLinks';
 
 const FEATURES = [
