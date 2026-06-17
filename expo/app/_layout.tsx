@@ -1,3 +1,4 @@
+// toolkit-sdk version hint: "expo": "~54.0.0"
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
@@ -11,9 +12,12 @@ import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@/lib/auth-token-cache";
 import { RevenueCatProvider } from "@/store/revenuecat-store";
 import { useUserStore } from "@/store/user-store";
+import { ErrorBoundary } from "@/app/error-boundary";
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 const HAS_CLERK = CLERK_PUBLISHABLE_KEY.length > 0;
+
+export { ErrorBoundary };
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
