@@ -1,23 +1,71 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import createContextHook from '@nkzw/create-context-hook';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-// Types only (no runtime import) - safe in Expo Go
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 type CustomerInfo = any;
 type PurchasesOfferings = any;
 type PurchasesPackage = any;
+type PurchasesModule = any;
 
-const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '';
-const ENTITLEMENT_ID = 'Level up Pro';
-const IS_EXPO_GO = Constants.appOwnership === 'expo';
+interface PurchaseResult {
+  success: boolean;
+  customerInfo?: CustomerInfo;
+  error?: string;
+  userCancelled?: boolean;
+}
+
+interface RestoreResult {
+  success: boolean;
+  customerInfo?: CustomerInfo;
+  error?: string;
+}
+
+interface ActiveSubscription {
+  productIdentifier: string;
+  expirationDate: string | null;
+  periodType: string | null;
+  willRenew: boolean | null;
+}
+
+// ─── API Key Selection (3-key pattern) ────────────────────────────────────────
 
 /**
- * Lazily load react-native-purchases. It's a native module that throws on
- * import inside Expo Go, so we only require it on supported platforms.
+ * Picks the correct RevenueCat API key based on platform and build mode.
+ *
+ * - Web preview & __DEV__ builds → Test Store key
+ * - Production iOS → iOS App Store key
+ * - Production Android → Google Play key
  */
-const loadPurchases = (): any | null => {
-  if (Platform.OS === 'web' || IS_EXPO_GO) return null;
+const getRCToken = (): string => {
+  // Dev builds and web preview use the test store
+  if (__DEV__ || Platform.OS === 'web') {
+    return process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY || '';
+  }
+  // Production builds use platform-specific keys
+  return Platform.select({
+    ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY || '',
+    android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY || '',
+    default: process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY || '',
+  });
+};
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const RC_API_KEY = getRCToken();
+const ENTITLEMENT_ID = 'Level Up Pro';
+const IS_EXPO_GO = Constants.appOwnership === 'expo';
+
+// ─── Lazy Native Module Loader ────────────────────────────────────────────────
+
+/**
+ * Lazily loads react-native-purchases. It's a native module that crashes on
+ * import inside Expo Go, so we only require it when the runtime supports it.
+ */
+const loadPurchases = (): PurchasesModule | null => {
+  if (IS_EXPO_GO) return null;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('react-native-purchases');
@@ -28,75 +76,74 @@ const loadPurchases = (): any | null => {
   }
 };
 
+// ─── Top-Level SDK Configuration ──────────────────────────────────────────────
+
+/**
+ * Configure RevenueCat once at module scope. This runs as soon as the
+ * module is first imported — not inside a useEffect or component.
+ *
+ * The call is a no-op on:
+ * - Expo Go (native module unavailable)
+ * - Missing API key
+ */
+let purchasesInstance: PurchasesModule | null = null;
+
+const configurePurchasesModule = (): void => {
+  if (purchasesInstance !== null) return; // already configured
+  if (!RC_API_KEY) {
+    console.log('[RevenueCat] No API key configured, skipping');
+    return;
+  }
+
+  const Purchases = loadPurchases();
+  if (!Purchases) {
+    console.log('[RevenueCat] Native module not available, skipping');
+    return;
+  }
+
+  try {
+    Purchases.setLogLevel(__DEV__ ? Purchases.LOG_LEVEL.DEBUG : Purchases.LOG_LEVEL.INFO);
+    Purchases.configure({ apiKey: RC_API_KEY });
+    purchasesInstance = Purchases;
+    console.log('[RevenueCat] SDK configured successfully');
+  } catch (err) {
+    console.error('[RevenueCat] Configuration error:', err);
+  }
+};
+
+// Configure immediately at module import time
+configurePurchasesModule();
+
+// ─── Context Provider & Hook ──────────────────────────────────────────────────
+
 export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
-  const [isConfigured, setIsConfigured] = useState<boolean>(false);
+  const [isConfigured, setIsConfigured] = useState<boolean>(purchasesInstance !== null);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [offerings, setOfferings] = useState<PurchasesOfferings | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // ── Fetch customer info and offerings on mount ──────────────────────────
+
   useEffect(() => {
-    configurePurchases();
+    if (!purchasesInstance) {
+      setIsLoading(false);
+      return;
+    }
+    Promise.all([fetchCustomerInfo(), fetchOfferings()]).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const configurePurchases = async () => {
-    try {
-      console.log('[RevenueCat] Configuring SDK...');
+  // ── Core API Helpers ────────────────────────────────────────────────────
 
-      if (Platform.OS === 'web') {
-        console.log('[RevenueCat] Web platform, skipping');
-        setIsConfigured(false);
-        setIsLoading(false);
-        return;
-      }
-
-      if (IS_EXPO_GO) {
-        console.log('[RevenueCat] Running in Expo Go, skipping native init');
-        setIsConfigured(false);
-        setIsLoading(false);
-        return;
-      }
-
-      if (!REVENUECAT_API_KEY) {
-        console.warn('[RevenueCat] API key not configured, skipping initialization');
-        setIsConfigured(false);
-        setIsLoading(false);
-        return;
-      }
-
-      const Purchases = loadPurchases();
-      if (!Purchases) {
-        setIsConfigured(false);
-        setIsLoading(false);
-        return;
-      }
-
-      Purchases.setLogLevel(__DEV__ ? Purchases.LOG_LEVEL.DEBUG : Purchases.LOG_LEVEL.INFO);
-      Purchases.configure({ apiKey: REVENUECAT_API_KEY });
-
-      console.log('[RevenueCat] SDK configured successfully');
-      setIsConfigured(true);
-
-      await fetchCustomerInfo();
-      await fetchOfferings();
-    } catch (err) {
-      console.error('[RevenueCat] Configuration error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to configure RevenueCat');
-      setIsConfigured(false);
-      setIsLoading(false);
-    }
-  };
-
-  const fetchCustomerInfo = async () => {
-    const Purchases = loadPurchases();
-    if (!Purchases) {
+  const fetchCustomerInfo = useCallback(async (): Promise<CustomerInfo | null> => {
+    if (!purchasesInstance) {
       setIsLoading(false);
       return null;
     }
     try {
       console.log('[RevenueCat] Fetching customer info...');
-      const info = await Purchases.getCustomerInfo();
+      const info = await purchasesInstance.getCustomerInfo();
       setCustomerInfo(info);
       setIsLoading(false);
       return info;
@@ -106,14 +153,13 @@ export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
       setIsLoading(false);
       return null;
     }
-  };
+  }, []);
 
-  const fetchOfferings = async () => {
-    const Purchases = loadPurchases();
-    if (!Purchases) return null;
+  const fetchOfferings = useCallback(async (): Promise<PurchasesOfferings | null> => {
+    if (!purchasesInstance) return null;
     try {
       console.log('[RevenueCat] Fetching offerings...');
-      const fetchedOfferings = await Purchases.getOfferings();
+      const fetchedOfferings = await purchasesInstance.getOfferings();
       setOfferings(fetchedOfferings);
       return fetchedOfferings;
     } catch (err) {
@@ -121,18 +167,17 @@ export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
       setError(err instanceof Error ? err.message : 'Failed to fetch offerings');
       return null;
     }
-  };
+  }, []);
 
-  const purchasePackage = async (pkg: PurchasesPackage) => {
-    const Purchases = loadPurchases();
-    if (!isConfigured || !Purchases) {
+  const purchasePackage = useCallback(async (pkg: PurchasesPackage): Promise<PurchaseResult> => {
+    if (!purchasesInstance) {
       console.warn('[RevenueCat] SDK not configured');
       return { success: false, error: 'RevenueCat not configured', userCancelled: false };
     }
 
     try {
       console.log('[RevenueCat] Purchasing package:', pkg.identifier);
-      const { customerInfo: info } = await Purchases.purchasePackage(pkg);
+      const { customerInfo: info } = await purchasesInstance.purchasePackage(pkg);
       setCustomerInfo(info);
       return { success: true, customerInfo: info };
     } catch (err: any) {
@@ -146,18 +191,17 @@ export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
         userCancelled: false,
       };
     }
-  };
+  }, []);
 
-  const restorePurchases = async () => {
-    const Purchases = loadPurchases();
-    if (!isConfigured || !Purchases) {
+  const restorePurchases = useCallback(async (): Promise<RestoreResult> => {
+    if (!purchasesInstance) {
       console.warn('[RevenueCat] SDK not configured');
       return { success: false, error: 'RevenueCat not configured' };
     }
 
     try {
       console.log('[RevenueCat] Restoring purchases...');
-      const info = await Purchases.restorePurchases();
+      const info = await purchasesInstance.restorePurchases();
       setCustomerInfo(info);
       return { success: true, customerInfo: info };
     } catch (err) {
@@ -167,25 +211,29 @@ export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
         error: err instanceof Error ? err.message : 'Failed to restore purchases',
       };
     }
-  };
+  }, []);
 
-  const isPro = (): boolean => {
+  // ── Entitlement & Subscription Helpers ──────────────────────────────────
+
+  const isPro = ((): boolean => {
     if (!customerInfo) return false;
     const entitlement = customerInfo.entitlements?.active?.[ENTITLEMENT_ID];
     return entitlement?.isActive === true;
-  };
+  })();
 
-  const getActiveSubscription = () => {
+  const getActiveSubscription = useCallback((): ActiveSubscription | null => {
     if (!customerInfo) return null;
     const entitlement = customerInfo.entitlements?.active?.[ENTITLEMENT_ID];
     if (!entitlement?.isActive) return null;
     return {
       productIdentifier: entitlement.productIdentifier,
-      expirationDate: entitlement.expirationDate,
-      periodType: entitlement.periodType,
-      willRenew: entitlement.willRenew,
+      expirationDate: entitlement.expirationDate ?? null,
+      periodType: entitlement.periodType ?? null,
+      willRenew: entitlement.willRenew ?? null,
     };
-  };
+  }, [customerInfo]);
+
+  // ── Public API ──────────────────────────────────────────────────────────
 
   return {
     isConfigured,
@@ -193,7 +241,7 @@ export const [RevenueCatProvider, useRevenueCat] = createContextHook(() => {
     offerings,
     isLoading,
     error,
-    isPro: isPro(),
+    isPro,
     activeSubscription: getActiveSubscription(),
     purchasePackage,
     restorePurchases,

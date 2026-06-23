@@ -4,5 +4,14 @@
 # Get your API key from: https://platform.openai.com/api-keys
 OPENAI_API_KEY=
 
+# RevenueCat API Keys
+# Get your keys from: https://app.revenuecat.com/settings/api-keys
+# Test key — used for web preview and dev builds
+EXPO_PUBLIC_REVENUECAT_TEST_API_KEY=test_EizTBuksQCAarfoBTMjPbOpDOys
+# iOS production key — used for App Store builds
+EXPO_PUBLIC_REVENUECAT_IOS_API_KEY=
+# Android production key — used for Play Store builds
+EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY=
+
 # IMPORTANT: Never commit this file with real API keys to version control
 # This file should be listed in .gitignore

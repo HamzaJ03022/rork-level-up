@@ -234,7 +234,7 @@ export default function PaywallScreen() {
           </View>
         ) : (
           <View style={styles.plansContainer}>
-            {availablePackages.map((pkg) => {
+            {availablePackages.map((pkg: PurchasesPackage) => {
               const details = getPackageDetails(pkg);
               const isSelected = selectedPackage?.identifier === pkg.identifier;
 
